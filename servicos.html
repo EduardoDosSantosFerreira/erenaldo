@@ -7,129 +7,6 @@
     <title>ERENALDO - Serviços</title>
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/servicos.css">
-    <style>
-        /* Estilos extras para validação */
-        .form-group .input-hint {
-            font-size: 11px;
-            color: var(--gray-400);
-            margin-top: 3px;
-            display: block;
-            transition: var(--transition);
-        }
-
-        .form-group .input-hint.error-hint {
-            color: #f44336;
-        }
-
-        .form-group .input-hint.success-hint {
-            color: #4CAF50;
-        }
-
-        .form-group .char-counter {
-            font-size: 11px;
-            color: var(--gray-400);
-            text-align: right;
-            margin-top: 2px;
-            transition: var(--transition);
-        }
-
-        .form-group .char-counter.limit {
-            color: #f44336;
-        }
-
-        .form-group input.valid,
-        .form-group textarea.valid,
-        .form-group select.valid {
-            border-color: #4CAF50;
-            background: #F1F8E9;
-        }
-
-        .form-group input.invalid,
-        .form-group textarea.invalid,
-        .form-group select.invalid {
-            border-color: #f44336;
-            background: #FFF5F5;
-        }
-
-        .form-group input:focus.valid,
-        .form-group textarea:focus.valid,
-        .form-group select:focus.valid {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-        }
-
-        .form-group input:focus.invalid,
-        .form-group textarea:focus.invalid,
-        .form-group select:focus.invalid {
-            border-color: #f44336;
-            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
-        }
-
-        .form-group .input-icon-container {
-            position: relative;
-        }
-
-        .form-group .input-icon-container .input-status {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 18px;
-            pointer-events: none;
-            transition: var(--transition);
-        }
-
-        .form-group .input-icon-container .input-status.valid {
-            color: #4CAF50;
-        }
-
-        .form-group .input-icon-container .input-status.invalid {
-            color: #f44336;
-        }
-
-        .form-group textarea+.input-status {
-            top: 14px;
-            transform: none;
-        }
-
-        @keyframes shakeInput {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .form-group input.shake,
-        .form-group select.shake,
-        .form-group textarea.shake {
-            animation: shakeInput 0.3s ease;
-        }
-
-        /* Estilo para o campo de valor com máscara */
-        .form-group .currency-input {
-            position: relative;
-        }
-
-        .form-group .currency-input .currency-symbol {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray-500);
-            font-weight: 600;
-            font-size: 15px;
-            pointer-events: none;
-        }
-
-        .form-group .currency-input input {
-            padding-left: 28px;
-        }
-
-        @media (max-width: 480px) {
-            .form-group .input-hint {
-                font-size: 10px;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -148,11 +25,11 @@
             <!-- Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-value" id="totalServicos">0</div>
+                    <div class="stat-value total" id="totalServicos">0</div>
                     <div class="stat-label">Total</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value success" id="servicosConcluidos">0</div>
+                    <div class="stat-value recebido" id="servicosConcluidos">0</div>
                     <div class="stat-label">Concluídos</div>
                 </div>
                 <div class="stat-card">
@@ -160,8 +37,18 @@
                     <div class="stat-label">Pendentes</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value primary" id="valorTotalServicos">R$ 0,00</div>
+                    <div class="stat-value total" id="valorTotalServicos">R$ 0,00</div>
                     <div class="stat-label">Valor Total</div>
+                </div>
+                <!-- NOVO CARD: Valor a Receber -->
+                <div class="stat-card destaque">
+                    <div class="stat-value receber" id="valorAReceber">R$ 0,00</div>
+                    <div class="stat-label"> Valor a Receber</div>
+                </div>
+                <!-- NOVO CARD: Valor Recebido -->
+                <div class="stat-card">
+                    <div class="stat-value recebido" id="valorRecebido">R$ 0,00</div>
+                    <div class="stat-label"> Valor Recebido</div>
                 </div>
             </div>
 
@@ -283,7 +170,8 @@
                 <div class="form-group">
                     <label>Descrição</label>
                     <div class="input-icon-container">
-                        <textarea id="servicoDescricao" placeholder="Descrição detalhada..." rows="3" maxlength="500"></textarea>
+                        <textarea id="servicoDescricao" placeholder="Descrição detalhada..." rows="3"
+                            maxlength="500"></textarea>
                     </div>
                     <div class="char-counter" id="descricaoCounter">0/500</div>
                 </div>
@@ -339,8 +227,10 @@
                 </button>
             </div>
             <div style="text-align: center; padding: 16px 0;">
-                <i data-lucide="alert-triangle" style="width: 48px; height: 48px; color: #F57C00; margin-bottom: 12px;"></i>
-                <p id="confirmMessage" style="font-size: 15px; color: var(--gray-600);">Tem certeza que deseja excluir este serviço?</p>
+                <i data-lucide="alert-triangle"
+                    style="width: 48px; height: 48px; color: #F57C00; margin-bottom: 12px;"></i>
+                <p id="confirmMessage" style="font-size: 15px; color: var(--gray-600);">Tem certeza que deseja excluir
+                    este serviço?</p>
             </div>
             <div class="modal-footer" style="border-top: none; padding-top: 0;">
                 <button class="btn btn-secondary" id="confirmCancelBtn">Cancelar</button>
@@ -366,7 +256,7 @@
         // ============================================
         // TOAST
         // ============================================
-        window.showToast = function(message, type = 'info') {
+        window.showToast = function (message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
 
@@ -403,7 +293,7 @@
         // ============================================
         // CONFIRM
         // ============================================
-        window.showConfirm = function(message, callback) {
+        window.showConfirm = function (message, callback) {
             document.getElementById('confirmMessage').textContent = message;
             window.confirmCallback = callback;
             document.getElementById('confirmModal').style.display = 'flex';
@@ -430,15 +320,9 @@
         // MÁSCARA DE VALOR
         // ============================================
         function formatCurrency(value) {
-            // Remove tudo que não é número
             let cleaned = value.replace(/\D/g, '');
-            
             if (cleaned === '') return '';
-            
-            // Converte para centavos
             let number = parseInt(cleaned) / 100;
-            
-            // Formata como moeda brasileira
             return number.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
@@ -447,14 +331,13 @@
 
         function parseCurrency(value) {
             if (!value) return null;
-            // Remove tudo que não é número ou vírgula
             let cleaned = value.replace(/[^\d,]/g, '').replace(',', '.');
             let number = parseFloat(cleaned);
             return isNaN(number) ? null : number;
         }
 
         // ============================================
-        // VALIDAÇÕES EM TEMPO REAL
+        // VALIDAÇÕES
         // ============================================
         function validateCliente(value) {
             return { isValid: value !== '' };
@@ -661,11 +544,19 @@
                 const concluidos = this.servicos.filter(s => s.status === 'concluido').length;
                 const pendentes = this.servicos.filter(s => s.status === 'pendente').length;
                 const valorTotal = this.servicos.reduce((sum, s) => sum + (s.valor || 0), 0);
+                const valorRecebido = this.servicos
+                    .filter(s => s.status === 'concluido')
+                    .reduce((sum, s) => sum + (s.valor || 0), 0);
+                const valorAReceber = this.servicos
+                    .filter(s => s.status === 'pendente')
+                    .reduce((sum, s) => sum + (s.valor || 0), 0);
 
                 document.getElementById('totalServicos').textContent = total;
                 document.getElementById('servicosConcluidos').textContent = concluidos;
                 document.getElementById('servicosPendentes').textContent = pendentes;
                 document.getElementById('valorTotalServicos').textContent = `R$ ${valorTotal.toFixed(2)}`;
+                document.getElementById('valorRecebido').textContent = `R$ ${valorRecebido.toFixed(2)}`;
+                document.getElementById('valorAReceber').textContent = `R$ ${valorAReceber.toFixed(2)}`;
             }
 
             setupRealtimeValidation() {
@@ -674,7 +565,6 @@
                 const clienteStatus = document.getElementById('clienteStatus');
                 const clienteHint = document.getElementById('clienteHint');
                 const clienteError = document.getElementById('clienteError');
-                const clienteGroup = document.getElementById('clienteGroup');
 
                 clienteSelect.addEventListener('change', () => {
                     const validation = validateCliente(clienteSelect.value);
@@ -701,7 +591,6 @@
                 const nomeHint = document.getElementById('nomeHint');
                 const nomeError = document.getElementById('nomeError');
                 const nomeCounter = document.getElementById('nomeCounter');
-                const nomeGroup = document.getElementById('nomeGroup');
 
                 nomeInput.addEventListener('input', () => {
                     const value = nomeInput.value;
@@ -737,7 +626,6 @@
                 const dataStatus = document.getElementById('dataStatus');
                 const dataHint = document.getElementById('dataHint');
                 const dataError = document.getElementById('dataError');
-                const dataGroup = document.getElementById('dataGroup');
 
                 dataInput.addEventListener('change', () => {
                     const validation = validateData(dataInput.value);
@@ -763,11 +651,9 @@
                 const valorHint = document.getElementById('valorHint');
 
                 valorInput.addEventListener('input', () => {
-                    const cursorPos = valorInput.selectionStart;
                     const rawValue = valorInput.value;
-                    // Remove formatação para pegar apenas números
                     const numbers = rawValue.replace(/\D/g, '');
-                    
+
                     if (numbers === '') {
                         valorInput.value = '';
                         valorHint.className = 'input-hint';
@@ -775,17 +661,9 @@
                         return;
                     }
 
-                    // Formata como moeda
                     const formatted = formatCurrency(numbers);
                     valorInput.value = formatted;
 
-                    // Ajusta o cursor
-                    const newPos = cursorPos + (formatted.length - rawValue.length);
-                    if (newPos > 0 && newPos <= formatted.length) {
-                        valorInput.setSelectionRange(newPos, newPos);
-                    }
-
-                    // Valida o valor
                     const parsed = parseCurrency(formatted);
                     if (parsed !== null && parsed > 0) {
                         valorHint.className = 'input-hint success-hint';
@@ -815,7 +693,6 @@
             validateForm() {
                 let isValid = true;
 
-                // Cliente
                 const cliente = document.getElementById('servicoCliente');
                 const clienteError = document.getElementById('clienteError');
                 const clienteStatus = document.getElementById('clienteStatus');
@@ -831,7 +708,6 @@
                     isValid = false;
                 }
 
-                // Nome
                 const nome = document.getElementById('servicoNome');
                 const nomeError = document.getElementById('nomeError');
                 const nomeStatus = document.getElementById('nomeStatus');
@@ -847,7 +723,6 @@
                     isValid = false;
                 }
 
-                // Data
                 const data = document.getElementById('servicoData');
                 const dataError = document.getElementById('dataError');
                 const dataStatus = document.getElementById('dataStatus');
@@ -1002,12 +877,10 @@
                     document.getElementById('servicoValor').value = data.valor ? `R$ ${data.valor.toFixed(2)}`.replace('.', ',') : '';
                     document.getElementById('servicoStatus').value = data.status;
                     document.getElementById('modalTitle').textContent = 'Editar Serviço';
-                    
-                    // Atualizar contadores
+
                     document.getElementById('nomeCounter').textContent = `${(data.servico || '').length}/100`;
                     document.getElementById('descricaoCounter').textContent = `${(data.descricao || '').length}/500`;
-                    
-                    // Atualizar hints
+
                     if (data.cliente_id) {
                         document.getElementById('clienteHint').textContent = 'Cliente selecionado ✓';
                         document.getElementById('clienteHint').className = 'input-hint success-hint';
@@ -1042,7 +915,7 @@
                     document.getElementById('servicoValor').value = '';
                     document.getElementById('servicoStatus').value = 'pendente';
                     document.getElementById('modalTitle').textContent = 'Novo Serviço';
-                    
+
                     document.getElementById('nomeCounter').textContent = '0/100';
                     document.getElementById('descricaoCounter').textContent = '0/500';
                 }
