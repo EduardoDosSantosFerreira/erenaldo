@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ERENALDO</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <style>
+        .welcome-section {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .welcome-section h2 {
+            font-size: 22px;
+            color: var(--secondary);
+        }
+        .welcome-section p {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <a href="dashboard.html" class="logo">ERENAL<span>DO</span></a>
+            <div class="user-info">
+                <span class="user-name" id="userName">Carregando...</span>
+                <div class="user-avatar" id="userAvatar">A</div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div id="appContent">
+            <div class="welcome-section">
+                <h2>Bem-vindo ao ERENALDO</h2>
+                <p>Seu sistema de gestão simplificado</p>
+            </div>
+            
+            <div class="stats-grid" id="dashboardStats">
+                <div class="stat-card">
+                    <div class="stat-value primary" id="totalClientes">0</div>
+                    <div class="stat-label">Clientes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalServicos">0</div>
+                    <div class="stat-label">Serviços</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value success" id="totalNotas">0</div>
+                    <div class="stat-label">Notas Fiscais</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value warning" id="servicosPendentes">0</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 16px;">
+                <h3 style="font-size: 16px; color: var(--gray-700); margin-bottom: 12px;">📋 Últimos Serviços</h3>
+                <div id="ultimosServicos">
+                    <div class="empty-state" style="padding: 20px;">
+                        <p>Nenhum serviço registrado</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="dashboard.html" class="active">
+                <i data-lucide="home"></i>
+                <span>Início</span>
+            </a>
+            <a href="clientes.html">
+                <i data-lucide="users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="servicos.html">
+                <i data-lucide="briefcase"></i>
+                <span>Serviços</span>
+            </a>
+            <a href="notas.html">
+                <i data-lucide="file-text"></i>
+                <span>Notas</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module">
+        import { AuthService } from './modules/auth.js';
+        import { Dashboard } from './modules/dashboard.js';
+
+        // Verificar autenticação
+        const user = await AuthService.checkAuth();
+        if (user) {
+            document.getElementById('userName').textContent = user.nome || 'Usuário';
+            document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
+        }
+
+        // Inicializar ícones
+        if (window.lucide) lucide.createIcons();
+
+        // Inicializar Dashboard
+        const dashboard = new Dashboard();
+    </script>
+</body>
+</html>

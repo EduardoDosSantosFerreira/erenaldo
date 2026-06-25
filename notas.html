@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ERENALDO - Notas Fiscais</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <a href="dashboard.html" class="logo">ERENAL<span>DO</span></a>
+            <div class="user-info">
+                <span class="user-name" id="userName">Carregando...</span>
+                <div class="user-avatar" id="userAvatar">A</div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="notas-container">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value success" id="totalNotas">0</div>
+                    <div class="stat-label">Total de Notas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value primary" id="valorTotalNotas">R$ 0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="notasComArquivo">0</div>
+                    <div class="stat-label">Com Arquivo</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-bar">
+                <div class="filter-row">
+                    <div class="filter-group" style="flex: 1;">
+                        <input type="text" id="searchNotas" placeholder="🔍 Buscar nota...">
+                    </div>
+                    <div class="filter-group">
+                        <select id="filtroClienteNota">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-primary btn-block" id="novaNotaBtn">
+                        <i data-lucide="file-plus"></i>
+                        Nova Nota
+                    </button>
+                </div>
+            </div>
+
+            <!-- List -->
+            <div id="notasList"></div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="dashboard.html">
+                <i data-lucide="home"></i>
+                <span>Início</span>
+            </a>
+            <a href="clientes.html">
+                <i data-lucide="users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="servicos.html">
+                <i data-lucide="briefcase"></i>
+                <span>Serviços</span>
+            </a>
+            <a href="notas.html" class="active">
+                <i data-lucide="file-text"></i>
+                <span>Notas</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal Nota -->
+    <div class="modal" id="notaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nova Nota Fiscal</h2>
+                <button class="modal-close" id="closeNotaModal">&times;</button>
+            </div>
+            <form id="notaForm">
+                <input type="hidden" id="notaId">
+                <div class="form-group">
+                    <label>Cliente *</label>
+                    <select id="notaCliente" required>
+                        <option value="">Selecione um cliente...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Número da Nota</label>
+                    <input type="text" id="notaNumero" placeholder="Número da nota fiscal">
+                </div>
+                <div class="form-group">
+                    <label>Serviço Prestado *</label>
+                    <input type="text" id="notaServicoPrestado" required placeholder="Descrição do serviço">
+                </div>
+                <div class="form-group">
+                    <label>Serviço Relacionado</label>
+                    <select id="notaServico">
+                        <option value="">Nenhum serviço relacionado</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data Emissão *</label>
+                        <input type="date" id="notaData" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor *</label>
+                        <input type="number" step="0.01" id="notaValor" required placeholder="0,00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Anexar Arquivo</label>
+                    <div class="file-upload" id="fileUpload">
+                        <input type="file" id="notaArquivo" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;">
+                        <div id="fileInfo">
+                            <div class="file-hint">📎 Toque para anexar um arquivo</div>
+                            <div class="file-name" id="fileName"></div>
+                        </div>
+                    </div>
+                    <small style="color: var(--gray-400); font-size: 12px;">Formatos: PDF, JPG, PNG, DOC</small>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeNotaModalBtn">Cancelar</button>
+                <button class="btn btn-primary" id="saveNotaBtn">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module">
+        import { AuthService } from './modules/auth.js';
+        import { NotasManager } from './modules/notas.js';
+
+        const user = await AuthService.checkAuth();
+        if (user) {
+            document.getElementById('userName').textContent = user.nome || 'Usuário';
+            document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
+        }
+
+        if (window.lucide) lucide.createIcons();
+
+        const notasManager = new NotasManager();
+        window.notasManager = notasManager;
+
+        document.getElementById('novaNotaBtn')?.addEventListener('click', () => notasManager.openModal());
+        document.getElementById('closeNotaModal')?.addEventListener('click', () => notasManager.closeModal());
+        document.getElementById('closeNotaModalBtn')?.addEventListener('click', () => notasManager.closeModal());
+        document.getElementById('saveNotaBtn')?.addEventListener('click', () => notasManager.saveNota());
+
+        // File upload handler
+        document.getElementById('fileUpload')?.addEventListener('click', () => {
+            document.getElementById('notaArquivo').click();
+        });
+
+        document.getElementById('notaArquivo')?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = `📄 ${file.name}`;
+                document.getElementById('fileUpload').classList.add('has-file');
+            }
+        });
+    </script>
+</body>
+</html>

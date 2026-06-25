@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ERENALDO - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .login-container {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-header { text-align: center; margin-bottom: 32px; }
+        .login-logo {
+            width: 72px; height: 72px;
+            background: #B71C1C;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 32px;
+            font-weight: 700;
+            color: #FFFFFF;
+            box-shadow: 0 8px 24px rgba(183,28,28,0.3);
+        }
+        .login-header h1 { font-size: 32px; font-weight: 700; color: #121212; }
+        .login-header h1 span { color: #B71C1C; }
+        .login-header p { color: #757575; margin-top: 6px; font-size: 14px; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; color: #424242; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input {
+            width: 100%; padding: 14px 16px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #FAFAFA;
+        }
+        .form-group input:focus { outline: none; border-color: #B71C1C; background: #FFFFFF; box-shadow: 0 0 0 4px rgba(183,28,28,0.1); }
+        .form-group input.error { border-color: #f44336; background: #FFF5F5; }
+
+        .error-message {
+            color: #f44336; font-size: 13px; margin-top: 8px;
+            display: none; text-align: center;
+            background: #FFEBEE; padding: 12px 16px;
+            border-radius: 10px;
+        }
+        .error-message.show { display: block; }
+
+        .btn-login {
+            width: 100%; padding: 16px;
+            background: #B71C1C; color: #FFFFFF;
+            border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+        .btn-login:hover:not(:disabled) { background: #8B0000; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(183,28,28,0.35); }
+        .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-login .loading-spinner {
+            display: inline-block; width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #FFFFFF;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle; margin-right: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .login-options { display: flex; justify-content: space-between; margin: 16px 0 8px; flex-wrap: wrap; gap: 8px; }
+        .login-options a { color: #757575; font-size: 13px; text-decoration: none; }
+        .login-options a:hover { color: #B71C1C; }
+        .login-options .register-link { color: #B71C1C; font-weight: 600; }
+
+        .login-footer { text-align: center; margin-top: 24px; color: #9E9E9E; font-size: 12px; padding-top: 16px; border-top: 1px solid #EEEEEE; }
+
+        .toast {
+            position: fixed; top: 20px; left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #4CAF50; color: white;
+            padding: 14px 28px; border-radius: 12px;
+            font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            opacity: 0;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.error { background: #f44336; }
+
+        @media (max-width: 480px) {
+            .login-container { padding: 28px 20px; }
+            .login-header h1 { font-size: 26px; }
+            .login-logo { width: 60px; height: 60px; font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">
+        <span id="toastMessage">✅ Login realizado com sucesso!</span>
+    </div>
+
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">E</div>
+            <h1>ERENAL<span>DO</span></h1>
+            <p>Sistema de Gestão Técnica</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>📧 Email</label>
+                <input type="email" id="email" placeholder="seu@email.com" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label>🔒 Senha</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <div id="errorMessage" class="error-message">
+                <span id="errorText">Email ou senha incorretos</span>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">
+                Entrar
+            </button>
+
+            <div class="login-options">
+                <a href="#" id="forgotPasswordLink">Esqueceu a senha?</a>
+                <a href="register.html" class="register-link">Criar nova conta →</a>
+            </div>
+        </form>
+
+        <div class="login-footer">
+            <p>© 2026 ERENALDO - Todos os direitos reservados</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import supabase from './services/supabase.js';
+
+        console.log('🚀 Página de Login carregada');
+
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const loginBtn = document.getElementById('loginBtn');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        function showToast(message, type = 'success') {
+            toastMessage.textContent = message;
+            toast.className = 'toast show';
+            if (type === 'error') {
+                toast.classList.add('error');
+            }
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ============================================
+        // LOGIN - VERSÃO SIMPLIFICADA E CORRIGIDA
+        // ============================================
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            console.log('📝 Tentando login com:', email);
+
+            errorMessage.classList.remove('show');
+
+            if (!email || !password) {
+                errorText.textContent = 'Preencha todos os campos.';
+                errorMessage.classList.add('show');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading-spinner"></span> Entrando...';
+
+            try {
+                // 1. Autenticar
+                console.log('🔐 Autenticando...');
+                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (authError) {
+                    console.error('❌ Erro:', authError);
+                    throw new Error(authError.message || 'Email ou senha incorretos');
+                }
+
+                console.log('✅ Autenticado:', authData.user.id);
+
+                // 2. Buscar ou criar perfil
+                let userData = null;
+
+                try {
+                    const { data, error } = await supabase
+                        .from('usuarios')
+                        .select('*')
+                        .eq('id', authData.user.id)
+                        .maybeSingle();
+
+                    if (error) {
+                        console.warn('⚠️ Erro ao buscar perfil:', error);
+                    } else if (data) {
+                        userData = data;
+                        console.log('✅ Perfil encontrado:', userData);
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Erro:', e);
+                }
+
+                // 3. Criar perfil se não existir
+                if (!userData) {
+                    console.log('📝 Criando perfil...');
+                    
+                    const nome = authData.user.user_metadata?.nome || 
+                                 authData.user.email?.split('@')[0] || 
+                                 'Usuário';
+
+                    const { data: newUser, error: createError } = await supabase
+                        .from('usuarios')
+                        .insert([{
+                            id: authData.user.id,
+                            email: authData.user.email,
+                            nome: nome,
+                            perfil: 'tecnico'
+                        }])
+                        .select()
+                        .single();
+
+                    if (createError) {
+                        console.error('❌ Erro ao criar perfil:', createError);
+                        throw new Error('Erro ao criar perfil');
+                    }
+
+                    userData = newUser;
+                    console.log('✅ Perfil criado:', userData);
+                }
+
+                console.log('✅ Login bem-sucedido!', userData.nome);
+
+                // Salvar sessão
+                localStorage.setItem('erenaldo_user', JSON.stringify({
+                    user: userData,
+                    timestamp: Date.now()
+                }));
+
+                showToast(`Bem-vindo(a), ${userData.nome}!`);
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 500);
+
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                errorText.textContent = error.message || 'Email ou senha incorretos';
+                errorMessage.classList.add('show');
+                passwordInput.value = '';
+                passwordInput.focus();
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Entrar';
+            }
+        });
+
+        // Remover erro ao digitar
+        [emailInput, passwordInput].forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.remove('error');
+                errorMessage.classList.remove('show');
+            });
+        });
+
+        // Enter para login
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // ============================================
+        // VERIFICAR SESSÃO EXISTENTE
+        // ============================================
+        async function checkSession() {
+            try {
+                const cached = localStorage.getItem('erenaldo_user');
+                if (cached) {
+                    const data = JSON.parse(cached);
+                    if (data.user && data.timestamp && (Date.now() - data.timestamp) < 86400000) {
+                        window.location.href = '/dashboard.html';
+                        return;
+                    }
+                }
+                
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    window.location.href = '/dashboard.html';
+                }
+            } catch (e) {
+                console.log('⚠️ Erro ao verificar sessão:', e);
+            }
+        }
+
+        await checkSession();
+        console.log('✅ Login inicializado');
+    </script>
+</body>
+</html>

@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ERENALDO - Clientes</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/clientes.css">
+    <style>
+        /* Estilos extras para validação */
+        .form-group .input-hint {
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 3px;
+            display: block;
+        }
+
+        .form-group .input-hint.error-hint {
+            color: #f44336;
+        }
+
+        .form-group .input-hint.success-hint {
+            color: #4CAF50;
+        }
+
+        .form-group .char-counter {
+            font-size: 11px;
+            color: var(--gray-400);
+            text-align: right;
+            margin-top: 2px;
+        }
+
+        .form-group .char-counter.limit {
+            color: #f44336;
+        }
+
+        .form-group input.valid {
+            border-color: #4CAF50;
+            background: #F1F8E9;
+        }
+
+        .form-group input.invalid {
+            border-color: #f44336;
+            background: #FFF5F5;
+        }
+
+        .form-group input:focus.valid {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .form-group input:focus.invalid {
+            border-color: #f44336;
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+        }
+
+        .form-group .input-icon-container {
+            position: relative;
+        }
+
+        .form-group .input-icon-container .input-status {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .form-group .input-icon-container .input-status.valid {
+            color: #4CAF50;
+        }
+
+        .form-group .input-icon-container .input-status.invalid {
+            color: #f44336;
+        }
+
+        /* Animações */
+        @keyframes shakeInput {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .form-group input.shake {
+            animation: shakeInput 0.3s ease;
+        }
+
+        @media (max-width: 480px) {
+            .form-group .input-hint {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <a href="dashboard.html" class="logo">ERENAL<span>DO</span></a>
+            <div class="user-info">
+                <span class="user-name" id="userName">Carregando...</span>
+                <div class="user-avatar" id="userAvatar">A</div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="clientes-container">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value primary" id="totalClientes">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalEmpresas">0</div>
+                    <div class="stat-label">Empresas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalResidenciais">0</div>
+                    <div class="stat-label">Residenciais</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="btn btn-primary" id="novoClienteBtn">
+                    <i data-lucide="user-plus"></i>
+                    Novo Cliente
+                </button>
+                <button class="btn btn-outline" id="refreshClientesBtn">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-bar">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <input type="text" id="searchClientes" placeholder="Buscar cliente...">
+                    </div>
+                    <div class="filter-group">
+                        <select id="filtroTipoCliente">
+                            <option value="">Todos os tipos</option>
+                            <option value="residencial">Residencial</option>
+                            <option value="empresa">Empresa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-clear" id="limparFiltrosBtn">
+                        <i data-lucide="x"></i>
+                        Limpar
+                    </button>
+                </div>
+            </div>
+
+            <!-- List -->
+            <div id="clientesList">
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <span>Carregando clientes...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="dashboard.html">
+                <i data-lucide="home"></i>
+                <span>Início</span>
+            </a>
+            <a href="clientes.html" class="active">
+                <i data-lucide="users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="servicos.html">
+                <i data-lucide="briefcase"></i>
+                <span>Serviços</span>
+            </a>
+            <a href="notas.html">
+                <i data-lucide="file-text"></i>
+                <span>Notas</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal Cliente -->
+    <div class="modal" id="clienteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Novo Cliente</h2>
+                <button class="modal-close" id="closeClienteModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="clienteForm" novalidate>
+                <input type="hidden" id="clienteId">
+                
+                <!-- Nome -->
+                <div class="form-group" id="nomeGroup">
+                    <label>Nome *</label>
+                    <div class="input-icon-container">
+                        <input type="text" id="clienteNome" required placeholder="Nome completo" maxlength="100">
+                        <span class="input-status" id="nomeStatus"></span>
+                    </div>
+                    <div class="form-error" id="nomeError">Nome é obrigatório</div>
+                    <div class="form-error" id="nomeNumberError">Nome não pode conter números</div>
+                    <span class="input-hint" id="nomeHint">Apenas letras e espaços</span>
+                    <div class="char-counter" id="nomeCounter">0/100</div>
+                </div>
+                
+                <!-- Tipo -->
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="clienteTipo">
+                        <option value="residencial">🏠 Residencial</option>
+                        <option value="empresa">🏢 Empresa</option>
+                    </select>
+                </div>
+                
+                <!-- Telefone -->
+                <div class="form-group" id="telefoneGroup">
+                    <label>Telefone</label>
+                    <div class="input-icon-container">
+                        <input type="tel" id="clienteTelefone" placeholder="(00) 00000-0000" maxlength="15">
+                        <span class="input-status" id="telefoneStatus"></span>
+                    </div>
+                    <div class="form-error" id="telefoneError">Telefone inválido (mínimo 10 dígitos)</div>
+                    <span class="input-hint" id="telefoneHint">Formato: (00) 00000-0000</span>
+                </div>
+                
+                <!-- Email - OPCIONAL -->
+                <div class="form-group" id="emailGroup">
+                    <label>Email <span style="color: var(--gray-400); font-weight: 400;">(opcional)</span></label>
+                    <div class="input-icon-container">
+                        <input type="email" id="clienteEmail" placeholder="email@exemplo.com" maxlength="100">
+                        <span class="input-status" id="emailStatus"></span>
+                    </div>
+                    <div class="form-error" id="emailError">Email inválido</div>
+                    <span class="input-hint" id="emailHint">Exemplo: nome@empresa.com</span>
+                </div>
+                
+                <!-- Endereço -->
+                <div class="form-group">
+                    <label>Endereço</label>
+                    <input type="text" id="clienteEndereco" placeholder="Rua, número, bairro" maxlength="200">
+                    <div class="char-counter" id="enderecoCounter">0/200</div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeClienteModalBtn">Cancelar</button>
+                <button class="btn btn-primary" id="saveClienteBtn">
+                    <i data-lucide="check"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content" style="max-width: 340px;">
+            <div class="modal-header">
+                <h2>Confirmar</h2>
+                <button class="modal-close" id="closeConfirmModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div style="text-align: center; padding: 16px 0;">
+                <i data-lucide="alert-triangle" style="width: 48px; height: 48px; color: #F57C00; margin-bottom: 12px;"></i>
+                <p id="confirmMessage" style="font-size: 15px; color: var(--gray-600);">Tem certeza que deseja excluir este cliente?</p>
+            </div>
+            <div class="modal-footer" style="border-top: none; padding-top: 0;">
+                <button class="btn btn-secondary" id="confirmCancelBtn">Cancelar</button>
+                <button class="btn btn-danger" id="confirmActionBtn">
+                    <i data-lucide="trash-2"></i>
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast">
+        <i data-lucide="check-circle"></i>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module">
+        // ============================================
+        // IMPORTAÇÕES
+        // ============================================
+        import { AuthService } from './modules/auth.js';
+        import supabase from './services/supabase.js';
+
+        // ============================================
+        // TOAST
+        // ============================================
+        window.showToast = function(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            if (!toast || !toastMessage) {
+                console.log(`[${type}] ${message}`);
+                return;
+            }
+            
+            const icon = toast.querySelector('i');
+            toast.className = '';
+            
+            const icons = {
+                success: 'check-circle',
+                error: 'x-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+            
+            if (icon) {
+                icon.setAttribute('data-lucide', icons[type] || 'info');
+            }
+            
+            toast.classList.add(type);
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            if (window.lucide) lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        };
+
+        // ============================================
+        // CONFIRM
+        // ============================================
+        window.showConfirm = function(message, callback) {
+            document.getElementById('confirmMessage').textContent = message;
+            window.confirmCallback = callback;
+            document.getElementById('confirmModal').style.display = 'flex';
+            if (window.lucide) lucide.createIcons();
+        };
+
+        document.getElementById('closeConfirmModal')?.addEventListener('click', () => {
+            document.getElementById('confirmModal').style.display = 'none';
+        });
+        
+        document.getElementById('confirmCancelBtn')?.addEventListener('click', () => {
+            document.getElementById('confirmModal').style.display = 'none';
+        });
+        
+        document.getElementById('confirmActionBtn')?.addEventListener('click', () => {
+            if (window.confirmCallback) {
+                window.confirmCallback();
+                window.confirmCallback = null;
+            }
+            document.getElementById('confirmModal').style.display = 'none';
+        });
+
+        // ============================================
+        // MÁSCARA DE TELEFONE
+        // ============================================
+        function maskTelefone(value) {
+            // Remove tudo que não é número
+            let cleaned = value.replace(/\D/g, '');
+            
+            // Limita a 11 dígitos
+            if (cleaned.length > 11) cleaned = cleaned.slice(0, 11);
+            
+            // Aplica a máscara
+            if (cleaned.length <= 10) {
+                // (XX) XXXX-XXXX
+                return cleaned.replace(/(\d{2})(\d{0,4})(\d{0,4})/, (match, ddd, p1, p2) => {
+                    let result = '';
+                    if (ddd) result += `(${ddd}`;
+                    if (p1) result += `) ${p1}`;
+                    if (p2) result += `-${p2}`;
+                    return result;
+                });
+            } else {
+                // (XX) XXXXX-XXXX
+                return cleaned.replace(/(\d{2})(\d{0,5})(\d{0,4})/, (match, ddd, p1, p2) => {
+                    let result = '';
+                    if (ddd) result += `(${ddd}`;
+                    if (p1) result += `) ${p1}`;
+                    if (p2) result += `-${p2}`;
+                    return result;
+                });
+            }
+        }
+
+        // ============================================
+        // VALIDAÇÕES EM TEMPO REAL
+        // ============================================
+        function validateNome(value) {
+            const hasNumber = /\d/.test(value);
+            const isValid = value.trim().length > 0 && !hasNumber;
+            return { isValid, hasNumber };
+        }
+
+        function validateTelefone(value) {
+            if (!value.trim()) return { isValid: true, cleaned: '' };
+            const cleaned = value.replace(/\D/g, '');
+            const isValid = cleaned.length >= 10 && cleaned.length <= 11;
+            return { isValid, cleaned };
+        }
+
+        function validateEmail(value) {
+            if (!value.trim()) return { isValid: true }; // Opcional
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return { isValid: emailRegex.test(value.trim()) };
+        }
+
+        // ============================================
+        // CLIENTES MANAGER
+        // ============================================
+        class ClientesManager {
+            constructor() {
+                this.clientes = [];
+                this.searchTerm = '';
+                this.filtroTipo = '';
+                this.loadClientes();
+                this.setupEvents();
+                this.setupRealtimeValidation();
+            }
+
+            async loadClientes() {
+                try {
+                    console.log('📥 Carregando clientes...');
+                    
+                    let query = supabase
+                        .from('clientes')
+                        .select('*')
+                        .order('nome');
+
+                    if (this.searchTerm) {
+                        query = query.ilike('nome', `%${this.searchTerm}%`);
+                    }
+
+                    if (this.filtroTipo) {
+                        query = query.eq('tipo', this.filtroTipo);
+                    }
+
+                    const { data, error } = await query;
+                    
+                    if (error) throw error;
+
+                    this.clientes = data || [];
+                    console.log(`✅ ${this.clientes.length} clientes carregados`);
+                    this.render();
+                    this.updateStats();
+
+                } catch (error) {
+                    console.error('❌ Erro:', error);
+                    window.showToast('Erro ao carregar clientes: ' + error.message, 'error');
+                }
+            }
+
+            render() {
+                const container = document.getElementById('clientesList');
+                if (!container) return;
+
+                if (this.clientes.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i data-lucide="users" class="empty-icon"></i>
+                            <h3>Nenhum cliente encontrado</h3>
+                            <p>Clique em "Novo Cliente" para começar</p>
+                            <button class="btn btn-primary" id="emptyNovoClienteBtn" style="margin-top: 16px;">
+                                <i data-lucide="user-plus"></i>
+                                Novo Cliente
+                            </button>
+                        </div>
+                    `;
+                    if (window.lucide) lucide.createIcons();
+                    document.getElementById('emptyNovoClienteBtn')?.addEventListener('click', () => {
+                        this.openModal();
+                    });
+                    return;
+                }
+
+                container.innerHTML = this.clientes.map(c => `
+                    <div class="cliente-card" data-id="${c.id}">
+                        <div class="card-header">
+                            <h3>${c.nome}</h3>
+                            <span class="badge-tipo ${c.tipo}">
+                                <i data-lucide="${c.tipo === 'residencial' ? 'home' : 'building-2'}"></i>
+                                ${c.tipo === 'residencial' ? 'Residencial' : 'Empresa'}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            ${c.telefone ? `<p><i data-lucide="phone"></i> ${c.telefone}</p>` : ''}
+                            ${c.email ? `<p><i data-lucide="mail"></i> ${c.email}</p>` : ''}
+                            ${c.endereco ? `<p><i data-lucide="map-pin"></i> ${c.endereco}</p>` : ''}
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-primary btn-sm btn-edit" data-id="${c.id}">
+                                <i data-lucide="edit-2"></i> Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm btn-delete" data-id="${c.id}">
+                                <i data-lucide="trash-2"></i> Excluir
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                if (window.lucide) lucide.createIcons();
+
+                container.querySelectorAll('.btn-edit').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        const cliente = this.clientes.find(c => c.id === id);
+                        if (cliente) this.openModal(cliente);
+                    });
+                });
+
+                container.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        window.showConfirm('Excluir este cliente?', () => {
+                            this.deleteCliente(id);
+                        });
+                    });
+                });
+            }
+
+            updateStats() {
+                const total = this.clientes.length;
+                const empresas = this.clientes.filter(c => c.tipo === 'empresa').length;
+                const residenciais = this.clientes.filter(c => c.tipo === 'residencial').length;
+
+                document.getElementById('totalClientes').textContent = total;
+                document.getElementById('totalEmpresas').textContent = empresas;
+                document.getElementById('totalResidenciais').textContent = residenciais;
+            }
+
+            validateForm() {
+                let isValid = true;
+
+                // Validar Nome
+                const nome = document.getElementById('clienteNome');
+                const nomeError = document.getElementById('nomeError');
+                const nomeNumberError = document.getElementById('nomeNumberError');
+                const nomeHint = document.getElementById('nomeHint');
+                const nomeStatus = document.getElementById('nomeStatus');
+                const nomeGroup = document.getElementById('nomeGroup');
+
+                const nomeValidation = validateNome(nome.value);
+                
+                if (!nome.value.trim()) {
+                    nome.className = 'invalid shake';
+                    nomeError.style.display = 'block';
+                    nomeNumberError.style.display = 'none';
+                    nomeHint.className = 'input-hint error-hint';
+                    nomeStatus.textContent = '❌';
+                    nomeStatus.className = 'input-status invalid';
+                    isValid = false;
+                } else if (nomeValidation.hasNumber) {
+                    nome.className = 'invalid shake';
+                    nomeError.style.display = 'none';
+                    nomeNumberError.style.display = 'block';
+                    nomeHint.className = 'input-hint error-hint';
+                    nomeStatus.textContent = '❌';
+                    nomeStatus.className = 'input-status invalid';
+                    isValid = false;
+                } else {
+                    nome.className = 'valid';
+                    nomeError.style.display = 'none';
+                    nomeNumberError.style.display = 'none';
+                    nomeHint.className = 'input-hint success-hint';
+                    nomeStatus.textContent = '✅';
+                    nomeStatus.className = 'input-status valid';
+                }
+
+                // Validar Telefone
+                const telefone = document.getElementById('clienteTelefone');
+                const telefoneError = document.getElementById('telefoneError');
+                const telefoneHint = document.getElementById('telefoneHint');
+                const telefoneStatus = document.getElementById('telefoneStatus');
+                const telefoneGroup = document.getElementById('telefoneGroup');
+
+                if (telefone.value.trim()) {
+                    const telValidation = validateTelefone(telefone.value);
+                    if (!telValidation.isValid) {
+                        telefone.className = 'invalid shake';
+                        telefoneError.style.display = 'block';
+                        telefoneHint.className = 'input-hint error-hint';
+                        telefoneStatus.textContent = '❌';
+                        telefoneStatus.className = 'input-status invalid';
+                        isValid = false;
+                    } else {
+                        telefone.className = 'valid';
+                        telefoneError.style.display = 'none';
+                        telefoneHint.className = 'input-hint success-hint';
+                        telefoneStatus.textContent = '✅';
+                        telefoneStatus.className = 'input-status valid';
+                    }
+                } else {
+                    telefone.className = '';
+                    telefoneError.style.display = 'none';
+                    telefoneHint.className = 'input-hint';
+                    telefoneStatus.textContent = '';
+                    telefoneStatus.className = 'input-status';
+                }
+
+                // Validar Email (opcional)
+                const email = document.getElementById('clienteEmail');
+                const emailError = document.getElementById('emailError');
+                const emailHint = document.getElementById('emailHint');
+                const emailStatus = document.getElementById('emailStatus');
+                const emailGroup = document.getElementById('emailGroup');
+
+                if (email.value.trim()) {
+                    const emailValidation = validateEmail(email.value);
+                    if (!emailValidation.isValid) {
+                        email.className = 'invalid shake';
+                        emailError.style.display = 'block';
+                        emailHint.className = 'input-hint error-hint';
+                        emailStatus.textContent = '❌';
+                        emailStatus.className = 'input-status invalid';
+                        isValid = false;
+                    } else {
+                        email.className = 'valid';
+                        emailError.style.display = 'none';
+                        emailHint.className = 'input-hint success-hint';
+                        emailStatus.textContent = '✅';
+                        emailStatus.className = 'input-status valid';
+                    }
+                } else {
+                    email.className = '';
+                    emailError.style.display = 'none';
+                    emailHint.className = 'input-hint';
+                    emailStatus.textContent = '';
+                    emailStatus.className = 'input-status';
+                }
+
+                return isValid;
+            }
+
+            setupRealtimeValidation() {
+                // Nome - validação em tempo real
+                const nomeInput = document.getElementById('clienteNome');
+                const nomeCounter = document.getElementById('nomeCounter');
+                const nomeStatus = document.getElementById('nomeStatus');
+                const nomeHint = document.getElementById('nomeHint');
+                const nomeError = document.getElementById('nomeError');
+                const nomeNumberError = document.getElementById('nomeNumberError');
+
+                nomeInput.addEventListener('input', () => {
+                    const value = nomeInput.value;
+                    const length = value.length;
+                    nomeCounter.textContent = `${length}/100`;
+                    
+                    if (length > 90) {
+                        nomeCounter.className = 'char-counter limit';
+                    } else {
+                        nomeCounter.className = 'char-counter';
+                    }
+
+                    if (value.trim().length > 0) {
+                        const validation = validateNome(value);
+                        if (validation.hasNumber) {
+                            nomeInput.className = 'invalid';
+                            nomeStatus.textContent = '❌';
+                            nomeStatus.className = 'input-status invalid';
+                            nomeHint.className = 'input-hint error-hint';
+                            nomeHint.textContent = 'Nome não pode conter números';
+                        } else {
+                            nomeInput.className = 'valid';
+                            nomeStatus.textContent = '✅';
+                            nomeStatus.className = 'input-status valid';
+                            nomeHint.className = 'input-hint success-hint';
+                            nomeHint.textContent = 'Válido ✓';
+                        }
+                    } else {
+                        nomeInput.className = '';
+                        nomeStatus.textContent = '';
+                        nomeStatus.className = 'input-status';
+                        nomeHint.className = 'input-hint';
+                        nomeHint.textContent = 'Apenas letras e espaços';
+                    }
+                });
+
+                // Telefone - máscara e validação
+                const telefoneInput = document.getElementById('clienteTelefone');
+                const telefoneStatus = document.getElementById('telefoneStatus');
+                const telefoneHint = document.getElementById('telefoneHint');
+                const telefoneError = document.getElementById('telefoneError');
+
+                telefoneInput.addEventListener('input', () => {
+                    const cursorPos = telefoneInput.selectionStart;
+                    const rawValue = telefoneInput.value;
+                    const masked = maskTelefone(rawValue);
+                    
+                    if (masked !== rawValue) {
+                        telefoneInput.value = masked;
+                        // Ajusta o cursor
+                        const newPos = cursorPos + (masked.length - rawValue.length);
+                        telefoneInput.setSelectionRange(newPos, newPos);
+                    }
+
+                    if (telefoneInput.value.trim()) {
+                        const validation = validateTelefone(telefoneInput.value);
+                        if (validation.isValid) {
+                            telefoneInput.className = 'valid';
+                            telefoneStatus.textContent = '✅';
+                            telefoneStatus.className = 'input-status valid';
+                            telefoneHint.className = 'input-hint success-hint';
+                            telefoneHint.textContent = 'Válido ✓';
+                            telefoneError.style.display = 'none';
+                        } else {
+                            telefoneInput.className = 'invalid';
+                            telefoneStatus.textContent = '❌';
+                            telefoneStatus.className = 'input-status invalid';
+                            telefoneHint.className = 'input-hint error-hint';
+                            telefoneHint.textContent = 'Mínimo 10 dígitos';
+                        }
+                    } else {
+                        telefoneInput.className = '';
+                        telefoneStatus.textContent = '';
+                        telefoneStatus.className = 'input-status';
+                        telefoneHint.className = 'input-hint';
+                        telefoneHint.textContent = 'Formato: (00) 00000-0000';
+                        telefoneError.style.display = 'none';
+                    }
+                });
+
+                // Email - validação em tempo real
+                const emailInput = document.getElementById('clienteEmail');
+                const emailStatus = document.getElementById('emailStatus');
+                const emailHint = document.getElementById('emailHint');
+                const emailError = document.getElementById('emailError');
+
+                emailInput.addEventListener('input', () => {
+                    if (emailInput.value.trim()) {
+                        const validation = validateEmail(emailInput.value);
+                        if (validation.isValid) {
+                            emailInput.className = 'valid';
+                            emailStatus.textContent = '✅';
+                            emailStatus.className = 'input-status valid';
+                            emailHint.className = 'input-hint success-hint';
+                            emailHint.textContent = 'Válido ✓';
+                            emailError.style.display = 'none';
+                        } else {
+                            emailInput.className = 'invalid';
+                            emailStatus.textContent = '❌';
+                            emailStatus.className = 'input-status invalid';
+                            emailHint.className = 'input-hint error-hint';
+                            emailHint.textContent = 'Exemplo: nome@empresa.com';
+                        }
+                    } else {
+                        emailInput.className = '';
+                        emailStatus.textContent = '';
+                        emailStatus.className = 'input-status';
+                        emailHint.className = 'input-hint';
+                        emailHint.textContent = 'Exemplo: nome@empresa.com';
+                        emailError.style.display = 'none';
+                    }
+                });
+
+                // Endereço - contador
+                const enderecoInput = document.getElementById('clienteEndereco');
+                const enderecoCounter = document.getElementById('enderecoCounter');
+
+                enderecoInput.addEventListener('input', () => {
+                    const length = enderecoInput.value.length;
+                    enderecoCounter.textContent = `${length}/200`;
+                    
+                    if (length > 180) {
+                        enderecoCounter.className = 'char-counter limit';
+                    } else {
+                        enderecoCounter.className = 'char-counter';
+                    }
+                });
+            }
+
+            async saveCliente() {
+                console.log('💾 Iniciando salvamento...');
+
+                if (!this.validateForm()) {
+                    window.showToast('Preencha os campos corretamente.', 'error');
+                    // Scroll para o primeiro erro
+                    const firstError = document.querySelector('.form-group input.invalid, .form-group .form-error.show');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                    return;
+                }
+
+                const id = document.getElementById('clienteId').value;
+                const nome = document.getElementById('clienteNome').value.trim();
+                const tipo = document.getElementById('clienteTipo').value;
+                const telefone = document.getElementById('clienteTelefone').value.trim();
+                const email = document.getElementById('clienteEmail').value.trim();
+                const endereco = document.getElementById('clienteEndereco').value.trim();
+
+                const data = {
+                    nome: nome,
+                    tipo: tipo,
+                    telefone: telefone || null,
+                    email: email || null,
+                    endereco: endereco || null
+                };
+
+                console.log('📦 Dados:', data);
+
+                const saveBtn = document.getElementById('saveClienteBtn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<span class="spinner"></span> Salvando...';
+                saveBtn.disabled = true;
+
+                try {
+                    if (id) {
+                        console.log('📝 Atualizando ID:', id);
+                        const { error } = await supabase
+                            .from('clientes')
+                            .update(data)
+                            .eq('id', id);
+
+                        if (error) throw error;
+                        window.showToast('Cliente atualizado! ✅', 'success');
+                    } else {
+                        console.log('📝 Criando novo cliente...');
+                        const { error } = await supabase
+                            .from('clientes')
+                            .insert([data]);
+
+                        if (error) throw error;
+                        window.showToast('Cliente criado! 🎉', 'success');
+                    }
+
+                    await this.loadClientes();
+                    this.closeModal();
+
+                } catch (error) {
+                    console.error('❌ Erro:', error);
+                    window.showToast('Erro: ' + error.message, 'error');
+                } finally {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                }
+            }
+
+            async deleteCliente(id) {
+                try {
+                    console.log('🗑️ Excluindo:', id);
+
+                    const { data: servicos } = await supabase
+                        .from('servicos')
+                        .select('id')
+                        .eq('cliente_id', id)
+                        .limit(1);
+
+                    if (servicos && servicos.length > 0) {
+                        window.showToast('Cliente possui serviços!', 'warning');
+                        return;
+                    }
+
+                    const { error } = await supabase
+                        .from('clientes')
+                        .delete()
+                        .eq('id', id);
+
+                    if (error) throw error;
+
+                    window.showToast('Cliente excluído! 🗑️', 'success');
+                    await this.loadClientes();
+
+                } catch (error) {
+                    console.error('❌ Erro:', error);
+                    window.showToast('Erro: ' + error.message, 'error');
+                }
+            }
+
+            openModal(data = null) {
+                const modal = document.getElementById('clienteModal');
+                if (!modal) return;
+
+                // Resetar tudo
+                document.querySelectorAll('.form-error').forEach(e => e.style.display = 'none');
+                document.querySelectorAll('#clienteForm input, #clienteForm select').forEach(el => {
+                    el.className = '';
+                });
+                document.querySelectorAll('.input-status').forEach(el => {
+                    el.textContent = '';
+                    el.className = 'input-status';
+                });
+                document.querySelectorAll('.input-hint').forEach(el => {
+                    el.className = 'input-hint';
+                });
+                document.querySelectorAll('.char-counter').forEach(el => {
+                    el.className = 'char-counter';
+                    el.textContent = el.id === 'nomeCounter' ? '0/100' : '0/200';
+                });
+
+                if (data) {
+                    document.getElementById('clienteId').value = data.id;
+                    document.getElementById('clienteNome').value = data.nome || '';
+                    document.getElementById('clienteTipo').value = data.tipo || 'residencial';
+                    document.getElementById('clienteTelefone').value = data.telefone || '';
+                    document.getElementById('clienteEmail').value = data.email || '';
+                    document.getElementById('clienteEndereco').value = data.endereco || '';
+                    document.getElementById('modalTitle').textContent = 'Editar Cliente';
+                    
+                    // Atualizar contadores
+                    document.getElementById('nomeCounter').textContent = `${(data.nome || '').length}/100`;
+                    document.getElementById('enderecoCounter').textContent = `${(data.endereco || '').length}/200`;
+                } else {
+                    document.getElementById('clienteId').value = '';
+                    document.getElementById('clienteNome').value = '';
+                    document.getElementById('clienteTipo').value = 'residencial';
+                    document.getElementById('clienteTelefone').value = '';
+                    document.getElementById('clienteEmail').value = '';
+                    document.getElementById('clienteEndereco').value = '';
+                    document.getElementById('modalTitle').textContent = 'Novo Cliente';
+                }
+
+                modal.style.display = 'flex';
+                if (window.lucide) lucide.createIcons();
+                setTimeout(() => document.getElementById('clienteNome').focus(), 300);
+            }
+
+            closeModal() {
+                document.getElementById('clienteModal').style.display = 'none';
+            }
+
+            setupEvents() {
+                document.getElementById('novoClienteBtn')?.addEventListener('click', () => this.openModal());
+                document.getElementById('closeClienteModal')?.addEventListener('click', () => this.closeModal());
+                document.getElementById('closeClienteModalBtn')?.addEventListener('click', () => this.closeModal());
+                
+                document.getElementById('saveClienteBtn')?.addEventListener('click', () => {
+                    console.log('🖱️ Botão Salvar clicado!');
+                    this.saveCliente();
+                });
+
+                document.getElementById('refreshClientesBtn')?.addEventListener('click', () => this.loadClientes());
+
+                document.getElementById('limparFiltrosBtn')?.addEventListener('click', () => {
+                    document.getElementById('searchClientes').value = '';
+                    document.getElementById('filtroTipoCliente').value = '';
+                    this.searchTerm = '';
+                    this.filtroTipo = '';
+                    this.loadClientes();
+                });
+
+                document.getElementById('searchClientes')?.addEventListener('input', (e) => {
+                    this.searchTerm = e.target.value;
+                    this.loadClientes();
+                });
+
+                document.getElementById('filtroTipoCliente')?.addEventListener('change', (e) => {
+                    this.filtroTipo = e.target.value;
+                    this.loadClientes();
+                });
+
+                document.getElementById('clienteForm')?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.saveCliente();
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+                    }
+                });
+            }
+        }
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        console.log('🚀 Inicializando...');
+
+        const user = await AuthService.checkAuth();
+        if (user) {
+            document.getElementById('userName').textContent = user.nome || 'Usuário';
+            document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
+        }
+
+        if (window.lucide) lucide.createIcons();
+
+        const manager = new ClientesManager();
+        window.clientesManager = manager;
+
+        console.log('✅ Clientes inicializado!');
+    </script>
+</body>
+</html>
