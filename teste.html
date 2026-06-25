@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Teste Supabase</title>
 </head>
+
 <body>
     <h1>Teste</h1>
     <div id="resultado">Testando...</div>
-    
+
     <script type="module">
         import supabase from './services/supabase.js';
-        
+
         const div = document.getElementById('resultado');
-        
+
         try {
             // Testar conexão
             const { data, error } = await supabase.from('clientes').select('*');
-            
+
             if (error) {
                 div.innerHTML = `❌ Erro: ${error.message}`;
             } else {
@@ -26,4 +28,5 @@
         }
     </script>
 </body>
+
 </html>

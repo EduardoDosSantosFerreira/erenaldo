@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ERENALDO - Login</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: #121212;
@@ -15,22 +21,37 @@
             min-height: 100vh;
             padding: 20px;
         }
+
         .login-container {
             background: #FFFFFF;
             border-radius: 20px;
             padding: 40px 32px;
             max-width: 420px;
             width: 100%;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
             animation: slideUp 0.6s ease;
         }
+
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .login-header { text-align: center; margin-bottom: 32px; }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
         .login-logo {
-            width: 72px; height: 72px;
+            width: 72px;
+            height: 72px;
             background: #B71C1C;
             border-radius: 50%;
             display: flex;
@@ -40,81 +61,194 @@
             font-size: 32px;
             font-weight: 700;
             color: #FFFFFF;
-            box-shadow: 0 8px 24px rgba(183,28,28,0.3);
+            box-shadow: 0 8px 24px rgba(183, 28, 28, 0.3);
         }
-        .login-header h1 { font-size: 32px; font-weight: 700; color: #121212; }
-        .login-header h1 span { color: #B71C1C; }
-        .login-header p { color: #757575; margin-top: 6px; font-size: 14px; }
 
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; color: #424242; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .login-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #121212;
+        }
+
+        .login-header h1 span {
+            color: #B71C1C;
+        }
+
+        .login-header p {
+            color: #757575;
+            margin-top: 6px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #424242;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .form-group input {
-            width: 100%; padding: 14px 16px;
+            width: 100%;
+            padding: 14px 16px;
             border: 2px solid #E0E0E0;
             border-radius: 12px;
             font-size: 15px;
             transition: all 0.3s ease;
             background: #FAFAFA;
         }
-        .form-group input:focus { outline: none; border-color: #B71C1C; background: #FFFFFF; box-shadow: 0 0 0 4px rgba(183,28,28,0.1); }
-        .form-group input.error { border-color: #f44336; background: #FFF5F5; }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #B71C1C;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 4px rgba(183, 28, 28, 0.1);
+        }
+
+        .form-group input.error {
+            border-color: #f44336;
+            background: #FFF5F5;
+        }
 
         .error-message {
-            color: #f44336; font-size: 13px; margin-top: 8px;
-            display: none; text-align: center;
-            background: #FFEBEE; padding: 12px 16px;
+            color: #f44336;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            text-align: center;
+            background: #FFEBEE;
+            padding: 12px 16px;
             border-radius: 10px;
         }
-        .error-message.show { display: block; }
+
+        .error-message.show {
+            display: block;
+        }
 
         .btn-login {
-            width: 100%; padding: 16px;
-            background: #B71C1C; color: #FFFFFF;
-            border: none; border-radius: 12px;
-            font-size: 16px; font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease;
+            width: 100%;
+            padding: 16px;
+            background: #B71C1C;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             margin-top: 8px;
         }
-        .btn-login:hover:not(:disabled) { background: #8B0000; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(183,28,28,0.35); }
-        .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .btn-login:hover:not(:disabled) {
+            background: #8B0000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(183, 28, 28, 0.35);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
         .btn-login .loading-spinner {
-            display: inline-block; width: 20px; height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: #FFFFFF;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            vertical-align: middle; margin-right: 10px;
+            vertical-align: middle;
+            margin-right: 10px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .login-options { display: flex; justify-content: space-between; margin: 16px 0 8px; flex-wrap: wrap; gap: 8px; }
-        .login-options a { color: #757575; font-size: 13px; text-decoration: none; }
-        .login-options a:hover { color: #B71C1C; }
-        .login-options .register-link { color: #B71C1C; font-weight: 600; }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-        .login-footer { text-align: center; margin-top: 24px; color: #9E9E9E; font-size: 12px; padding-top: 16px; border-top: 1px solid #EEEEEE; }
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            margin: 16px 0 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .login-options a {
+            color: #757575;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .login-options a:hover {
+            color: #B71C1C;
+        }
+
+        .login-options .register-link {
+            color: #B71C1C;
+            font-weight: 600;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            color: #9E9E9E;
+            font-size: 12px;
+            padding-top: 16px;
+            border-top: 1px solid #EEEEEE;
+        }
 
         .toast {
-            position: fixed; top: 20px; left: 50%;
+            position: fixed;
+            top: 20px;
+            left: 50%;
             transform: translateX(-50%) translateY(-100px);
-            background: #4CAF50; color: white;
-            padding: 14px 28px; border-radius: 12px;
+            background: #4CAF50;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
             font-weight: 500;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             z-index: 1000;
             transition: transform 0.5s ease, opacity 0.5s ease;
             opacity: 0;
         }
-        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        .toast.error { background: #f44336; }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
 
         @media (max-width: 480px) {
-            .login-container { padding: 28px 20px; }
-            .login-header h1 { font-size: 26px; }
-            .login-logo { width: 60px; height: 60px; font-size: 26px; }
+            .login-container {
+                padding: 28px 20px;
+            }
+
+            .login-header h1 {
+                font-size: 26px;
+            }
+
+            .login-logo {
+                width: 60px;
+                height: 60px;
+                font-size: 26px;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <div id="toast" class="toast">
@@ -186,7 +320,7 @@
         // ============================================
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
 
@@ -241,10 +375,10 @@
                 // 3. Criar perfil se não existir
                 if (!userData) {
                     console.log('📝 Criando perfil...');
-                    
-                    const nome = authData.user.user_metadata?.nome || 
-                                 authData.user.email?.split('@')[0] || 
-                                 'Usuário';
+
+                    const nome = authData.user.user_metadata?.nome ||
+                        authData.user.email?.split('@')[0] ||
+                        'Usuário';
 
                     const { data: newUser, error: createError } = await supabase
                         .from('usuarios')
@@ -320,7 +454,7 @@
                         return;
                     }
                 }
-                
+
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
                     window.location.href = '/dashboard.html';
@@ -334,4 +468,5 @@
         console.log('✅ Login inicializado');
     </script>
 </body>
+
 </html>

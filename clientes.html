@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -77,9 +78,19 @@
 
         /* Animações */
         @keyframes shakeInput {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
         }
 
         .form-group input.shake {
@@ -93,6 +104,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -196,7 +208,7 @@
             </div>
             <form id="clienteForm" novalidate>
                 <input type="hidden" id="clienteId">
-                
+
                 <!-- Nome -->
                 <div class="form-group" id="nomeGroup">
                     <label>Nome *</label>
@@ -209,7 +221,7 @@
                     <span class="input-hint" id="nomeHint">Apenas letras e espaços</span>
                     <div class="char-counter" id="nomeCounter">0/100</div>
                 </div>
-                
+
                 <!-- Tipo -->
                 <div class="form-group">
                     <label>Tipo</label>
@@ -218,7 +230,7 @@
                         <option value="empresa">🏢 Empresa</option>
                     </select>
                 </div>
-                
+
                 <!-- Telefone -->
                 <div class="form-group" id="telefoneGroup">
                     <label>Telefone</label>
@@ -229,7 +241,7 @@
                     <div class="form-error" id="telefoneError">Telefone inválido (mínimo 10 dígitos)</div>
                     <span class="input-hint" id="telefoneHint">Formato: (00) 00000-0000</span>
                 </div>
-                
+
                 <!-- Email - OPCIONAL -->
                 <div class="form-group" id="emailGroup">
                     <label>Email <span style="color: var(--gray-400); font-weight: 400;">(opcional)</span></label>
@@ -240,7 +252,7 @@
                     <div class="form-error" id="emailError">Email inválido</div>
                     <span class="input-hint" id="emailHint">Exemplo: nome@empresa.com</span>
                 </div>
-                
+
                 <!-- Endereço -->
                 <div class="form-group">
                     <label>Endereço</label>
@@ -268,8 +280,10 @@
                 </button>
             </div>
             <div style="text-align: center; padding: 16px 0;">
-                <i data-lucide="alert-triangle" style="width: 48px; height: 48px; color: #F57C00; margin-bottom: 12px;"></i>
-                <p id="confirmMessage" style="font-size: 15px; color: var(--gray-600);">Tem certeza que deseja excluir este cliente?</p>
+                <i data-lucide="alert-triangle"
+                    style="width: 48px; height: 48px; color: #F57C00; margin-bottom: 12px;"></i>
+                <p id="confirmMessage" style="font-size: 15px; color: var(--gray-600);">Tem certeza que deseja excluir
+                    este cliente?</p>
             </div>
             <div class="modal-footer" style="border-top: none; padding-top: 0;">
                 <button class="btn btn-secondary" id="confirmCancelBtn">Cancelar</button>
@@ -298,35 +312,35 @@
         // ============================================
         // TOAST
         // ============================================
-        window.showToast = function(message, type = 'info') {
+        window.showToast = function (message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
-            
+
             if (!toast || !toastMessage) {
                 console.log(`[${type}] ${message}`);
                 return;
             }
-            
+
             const icon = toast.querySelector('i');
             toast.className = '';
-            
+
             const icons = {
                 success: 'check-circle',
                 error: 'x-circle',
                 warning: 'alert-triangle',
                 info: 'info'
             };
-            
+
             if (icon) {
                 icon.setAttribute('data-lucide', icons[type] || 'info');
             }
-            
+
             toast.classList.add(type);
             toastMessage.textContent = message;
             toast.classList.add('show');
-            
+
             if (window.lucide) lucide.createIcons();
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
@@ -335,7 +349,7 @@
         // ============================================
         // CONFIRM
         // ============================================
-        window.showConfirm = function(message, callback) {
+        window.showConfirm = function (message, callback) {
             document.getElementById('confirmMessage').textContent = message;
             window.confirmCallback = callback;
             document.getElementById('confirmModal').style.display = 'flex';
@@ -345,11 +359,11 @@
         document.getElementById('closeConfirmModal')?.addEventListener('click', () => {
             document.getElementById('confirmModal').style.display = 'none';
         });
-        
+
         document.getElementById('confirmCancelBtn')?.addEventListener('click', () => {
             document.getElementById('confirmModal').style.display = 'none';
         });
-        
+
         document.getElementById('confirmActionBtn')?.addEventListener('click', () => {
             if (window.confirmCallback) {
                 window.confirmCallback();
@@ -364,10 +378,10 @@
         function maskTelefone(value) {
             // Remove tudo que não é número
             let cleaned = value.replace(/\D/g, '');
-            
+
             // Limita a 11 dígitos
             if (cleaned.length > 11) cleaned = cleaned.slice(0, 11);
-            
+
             // Aplica a máscara
             if (cleaned.length <= 10) {
                 // (XX) XXXX-XXXX
@@ -428,7 +442,7 @@
             async loadClientes() {
                 try {
                     console.log('📥 Carregando clientes...');
-                    
+
                     let query = supabase
                         .from('clientes')
                         .select('*')
@@ -443,7 +457,7 @@
                     }
 
                     const { data, error } = await query;
-                    
+
                     if (error) throw error;
 
                     this.clientes = data || [];
@@ -547,7 +561,7 @@
                 const nomeGroup = document.getElementById('nomeGroup');
 
                 const nomeValidation = validateNome(nome.value);
-                
+
                 if (!nome.value.trim()) {
                     nome.className = 'invalid shake';
                     nomeError.style.display = 'block';
@@ -651,7 +665,7 @@
                     const value = nomeInput.value;
                     const length = value.length;
                     nomeCounter.textContent = `${length}/100`;
-                    
+
                     if (length > 90) {
                         nomeCounter.className = 'char-counter limit';
                     } else {
@@ -692,7 +706,7 @@
                     const cursorPos = telefoneInput.selectionStart;
                     const rawValue = telefoneInput.value;
                     const masked = maskTelefone(rawValue);
-                    
+
                     if (masked !== rawValue) {
                         telefoneInput.value = masked;
                         // Ajusta o cursor
@@ -766,7 +780,7 @@
                 enderecoInput.addEventListener('input', () => {
                     const length = enderecoInput.value.length;
                     enderecoCounter.textContent = `${length}/200`;
-                    
+
                     if (length > 180) {
                         enderecoCounter.className = 'char-counter limit';
                     } else {
@@ -903,7 +917,7 @@
                     document.getElementById('clienteEmail').value = data.email || '';
                     document.getElementById('clienteEndereco').value = data.endereco || '';
                     document.getElementById('modalTitle').textContent = 'Editar Cliente';
-                    
+
                     // Atualizar contadores
                     document.getElementById('nomeCounter').textContent = `${(data.nome || '').length}/100`;
                     document.getElementById('enderecoCounter').textContent = `${(data.endereco || '').length}/200`;
@@ -930,7 +944,7 @@
                 document.getElementById('novoClienteBtn')?.addEventListener('click', () => this.openModal());
                 document.getElementById('closeClienteModal')?.addEventListener('click', () => this.closeModal());
                 document.getElementById('closeClienteModalBtn')?.addEventListener('click', () => this.closeModal());
-                
+
                 document.getElementById('saveClienteBtn')?.addEventListener('click', () => {
                     console.log('🖱️ Botão Salvar clicado!');
                     this.saveCliente();
@@ -990,4 +1004,5 @@
         console.log('✅ Clientes inicializado!');
     </script>
 </body>
+
 </html>

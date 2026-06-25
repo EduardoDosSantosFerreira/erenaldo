@@ -1,13 +1,137 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ERENALDO - Serviços</title>
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/servicos.css">
+    <style>
+        /* Estilos extras para validação */
+        .form-group .input-hint {
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 3px;
+            display: block;
+            transition: var(--transition);
+        }
 
+        .form-group .input-hint.error-hint {
+            color: #f44336;
+        }
+
+        .form-group .input-hint.success-hint {
+            color: #4CAF50;
+        }
+
+        .form-group .char-counter {
+            font-size: 11px;
+            color: var(--gray-400);
+            text-align: right;
+            margin-top: 2px;
+            transition: var(--transition);
+        }
+
+        .form-group .char-counter.limit {
+            color: #f44336;
+        }
+
+        .form-group input.valid,
+        .form-group textarea.valid,
+        .form-group select.valid {
+            border-color: #4CAF50;
+            background: #F1F8E9;
+        }
+
+        .form-group input.invalid,
+        .form-group textarea.invalid,
+        .form-group select.invalid {
+            border-color: #f44336;
+            background: #FFF5F5;
+        }
+
+        .form-group input:focus.valid,
+        .form-group textarea:focus.valid,
+        .form-group select:focus.valid {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .form-group input:focus.invalid,
+        .form-group textarea:focus.invalid,
+        .form-group select:focus.invalid {
+            border-color: #f44336;
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+        }
+
+        .form-group .input-icon-container {
+            position: relative;
+        }
+
+        .form-group .input-icon-container .input-status {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .form-group .input-icon-container .input-status.valid {
+            color: #4CAF50;
+        }
+
+        .form-group .input-icon-container .input-status.invalid {
+            color: #f44336;
+        }
+
+        .form-group textarea+.input-status {
+            top: 14px;
+            transform: none;
+        }
+
+        @keyframes shakeInput {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .form-group input.shake,
+        .form-group select.shake,
+        .form-group textarea.shake {
+            animation: shakeInput 0.3s ease;
+        }
+
+        /* Estilo para o campo de valor com máscara */
+        .form-group .currency-input {
+            position: relative;
+        }
+
+        .form-group .currency-input .currency-symbol {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-weight: 600;
+            font-size: 15px;
+            pointer-events: none;
+        }
+
+        .form-group .currency-input input {
+            padding-left: 28px;
+        }
+
+        @media (max-width: 480px) {
+            .form-group .input-hint {
+                font-size: 10px;
+            }
+        }
+    </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -36,7 +160,8 @@
                     <div class="stat-label">Pendentes</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value primary" id="valorTotalServicos">R$ 0</div>
+                    <div class="stat-value primary" id="valorTotalServicos">R$ 0,00</div>
+                    <div class="stat-label">Valor Total</div>
                 </div>
             </div>
 
@@ -79,7 +204,7 @@
                         </select>
                     </div>
                     <div class="filter-actions">
-                        <button class="btn btn-secondary" id="limparFiltrosBtn" style="width: 100%;">
+                        <button class="btn btn-clear" id="limparFiltrosBtn" style="width: 100%;">
                             <i data-lucide="x"></i>
                             Limpar
                         </button>
@@ -128,44 +253,69 @@
             </div>
             <form id="servicoForm" novalidate>
                 <input type="hidden" id="servicoId">
-                
-                <div class="form-group">
+
+                <!-- Cliente -->
+                <div class="form-group" id="clienteGroup">
                     <label>Cliente *</label>
-                    <select id="servicoCliente" required>
-                        <option value="">Selecione um cliente...</option>
-                    </select>
+                    <div class="input-icon-container">
+                        <select id="servicoCliente" required>
+                            <option value="">Selecione um cliente...</option>
+                        </select>
+                        <span class="input-status" id="clienteStatus"></span>
+                    </div>
                     <div class="form-error" id="clienteError">Selecione um cliente</div>
+                    <span class="input-hint" id="clienteHint">Selecione o cliente para este serviço</span>
                 </div>
-                
-                <div class="form-group">
+
+                <!-- Serviço -->
+                <div class="form-group" id="nomeGroup">
                     <label>Serviço *</label>
-                    <input type="text" id="servicoNome" required placeholder="Nome do serviço">
+                    <div class="input-icon-container">
+                        <input type="text" id="servicoNome" required placeholder="Nome do serviço" maxlength="100">
+                        <span class="input-status" id="nomeStatus"></span>
+                    </div>
                     <div class="form-error" id="nomeError">Nome do serviço é obrigatório</div>
+                    <span class="input-hint" id="nomeHint">Descreva o serviço de forma clara</span>
+                    <div class="char-counter" id="nomeCounter">0/100</div>
                 </div>
-                
+
+                <!-- Descrição -->
                 <div class="form-group">
                     <label>Descrição</label>
-                    <textarea id="servicoDescricao" placeholder="Descrição detalhada..." rows="3"></textarea>
+                    <div class="input-icon-container">
+                        <textarea id="servicoDescricao" placeholder="Descrição detalhada..." rows="3" maxlength="500"></textarea>
+                    </div>
+                    <div class="char-counter" id="descricaoCounter">0/500</div>
                 </div>
-                
+
+                <!-- Data e Valor -->
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group" id="dataGroup">
                         <label>Data *</label>
-                        <input type="date" id="servicoData" required>
+                        <div class="input-icon-container">
+                            <input type="date" id="servicoData" required>
+                            <span class="input-status" id="dataStatus"></span>
+                        </div>
                         <div class="form-error" id="dataError">Data é obrigatória</div>
+                        <span class="input-hint" id="dataHint">Selecione a data do serviço</span>
                     </div>
                     <div class="form-group">
                         <label>Valor</label>
-                        <input type="number" step="0.01" id="servicoValor" placeholder="0,00">
+                        <div class="currency-input">
+                            <span class="currency-symbol">R$</span>
+                            <input type="text" id="servicoValor" placeholder="0,00" maxlength="15">
+                        </div>
+                        <span class="input-hint" id="valorHint">Use vírgula para centavos (ex: 150,50)</span>
                     </div>
                 </div>
-                
+
+                <!-- Status -->
                 <div class="form-group">
                     <label>Status</label>
                     <select id="servicoStatus">
-                        <option value="pendente">Pendente</option>
-                        <option value="concluido">Concluído</option>
-                        <option value="cancelado">Cancelado</option>
+                        <option value="pendente">⏳ Pendente</option>
+                        <option value="concluido">✅ Concluído</option>
+                        <option value="cancelado">❌ Cancelado</option>
                     </select>
                 </div>
             </form>
@@ -214,37 +364,37 @@
         import supabase from './services/supabase.js';
 
         // ============================================
-        // TOAST CORRIGIDO
+        // TOAST
         // ============================================
         window.showToast = function(message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
-            
+
             if (!toast || !toastMessage) {
                 console.log(`[${type}] ${message}`);
                 return;
             }
-            
+
             const icon = toast.querySelector('i');
             toast.className = '';
-            
+
             const icons = {
                 success: 'check-circle',
                 error: 'x-circle',
                 warning: 'alert-triangle',
                 info: 'info'
             };
-            
+
             if (icon) {
                 icon.setAttribute('data-lucide', icons[type] || 'info');
             }
-            
+
             toast.classList.add(type);
             toastMessage.textContent = message;
             toast.classList.add('show');
-            
+
             if (window.lucide) lucide.createIcons();
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
@@ -263,11 +413,11 @@
         document.getElementById('closeConfirmModal')?.addEventListener('click', () => {
             document.getElementById('confirmModal').style.display = 'none';
         });
-        
+
         document.getElementById('confirmCancelBtn')?.addEventListener('click', () => {
             document.getElementById('confirmModal').style.display = 'none';
         });
-        
+
         document.getElementById('confirmActionBtn')?.addEventListener('click', () => {
             if (window.confirmCallback) {
                 window.confirmCallback();
@@ -275,6 +425,48 @@
             }
             document.getElementById('confirmModal').style.display = 'none';
         });
+
+        // ============================================
+        // MÁSCARA DE VALOR
+        // ============================================
+        function formatCurrency(value) {
+            // Remove tudo que não é número
+            let cleaned = value.replace(/\D/g, '');
+            
+            if (cleaned === '') return '';
+            
+            // Converte para centavos
+            let number = parseInt(cleaned) / 100;
+            
+            // Formata como moeda brasileira
+            return number.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function parseCurrency(value) {
+            if (!value) return null;
+            // Remove tudo que não é número ou vírgula
+            let cleaned = value.replace(/[^\d,]/g, '').replace(',', '.');
+            let number = parseFloat(cleaned);
+            return isNaN(number) ? null : number;
+        }
+
+        // ============================================
+        // VALIDAÇÕES EM TEMPO REAL
+        // ============================================
+        function validateCliente(value) {
+            return { isValid: value !== '' };
+        }
+
+        function validateNome(value) {
+            return { isValid: value.trim().length > 0 };
+        }
+
+        function validateData(value) {
+            return { isValid: value !== '' };
+        }
 
         // ============================================
         // SERVIÇOS MANAGER
@@ -291,6 +483,7 @@
                 this.loadClientes();
                 this.loadServicos();
                 this.setupEvents();
+                this.setupRealtimeValidation();
             }
 
             async loadClientes() {
@@ -320,9 +513,9 @@
                     const currentValue = select.value;
                     select.innerHTML = `
                         <option value="">${id === 'filtroCliente' ? 'Todos' : 'Selecione um cliente...'}</option>
-                        ${this.clientes.map(c => 
-                            `<option value="${c.id}">${c.nome}</option>`
-                        ).join('')}
+                        ${this.clientes.map(c =>
+                        `<option value="${c.id}">${c.nome}</option>`
+                    ).join('')}
                     `;
                     if (currentValue) select.value = currentValue;
                 });
@@ -331,7 +524,7 @@
             async loadServicos() {
                 try {
                     console.log('📥 Carregando serviços...');
-                    
+
                     let query = supabase
                         .from('servicos')
                         .select(`
@@ -362,7 +555,7 @@
                     }
 
                     const { data, error } = await query;
-                    
+
                     if (error) throw error;
 
                     this.servicos = data || [];
@@ -475,40 +668,199 @@
                 document.getElementById('valorTotalServicos').textContent = `R$ ${valorTotal.toFixed(2)}`;
             }
 
+            setupRealtimeValidation() {
+                // Cliente
+                const clienteSelect = document.getElementById('servicoCliente');
+                const clienteStatus = document.getElementById('clienteStatus');
+                const clienteHint = document.getElementById('clienteHint');
+                const clienteError = document.getElementById('clienteError');
+                const clienteGroup = document.getElementById('clienteGroup');
+
+                clienteSelect.addEventListener('change', () => {
+                    const validation = validateCliente(clienteSelect.value);
+                    if (validation.isValid) {
+                        clienteSelect.className = 'valid';
+                        clienteStatus.textContent = '✅';
+                        clienteStatus.className = 'input-status valid';
+                        clienteHint.className = 'input-hint success-hint';
+                        clienteHint.textContent = 'Cliente selecionado ✓';
+                        clienteError.style.display = 'none';
+                    } else {
+                        clienteSelect.className = '';
+                        clienteStatus.textContent = '';
+                        clienteStatus.className = 'input-status';
+                        clienteHint.className = 'input-hint';
+                        clienteHint.textContent = 'Selecione o cliente para este serviço';
+                        clienteError.style.display = 'none';
+                    }
+                });
+
+                // Nome
+                const nomeInput = document.getElementById('servicoNome');
+                const nomeStatus = document.getElementById('nomeStatus');
+                const nomeHint = document.getElementById('nomeHint');
+                const nomeError = document.getElementById('nomeError');
+                const nomeCounter = document.getElementById('nomeCounter');
+                const nomeGroup = document.getElementById('nomeGroup');
+
+                nomeInput.addEventListener('input', () => {
+                    const value = nomeInput.value;
+                    const length = value.length;
+                    nomeCounter.textContent = `${length}/100`;
+
+                    if (length > 90) {
+                        nomeCounter.className = 'char-counter limit';
+                    } else {
+                        nomeCounter.className = 'char-counter';
+                    }
+
+                    const validation = validateNome(value);
+                    if (validation.isValid) {
+                        nomeInput.className = 'valid';
+                        nomeStatus.textContent = '✅';
+                        nomeStatus.className = 'input-status valid';
+                        nomeHint.className = 'input-hint success-hint';
+                        nomeHint.textContent = 'Válido ✓';
+                        nomeError.style.display = 'none';
+                    } else {
+                        nomeInput.className = '';
+                        nomeStatus.textContent = '';
+                        nomeStatus.className = 'input-status';
+                        nomeHint.className = 'input-hint';
+                        nomeHint.textContent = 'Descreva o serviço de forma clara';
+                        nomeError.style.display = 'none';
+                    }
+                });
+
+                // Data
+                const dataInput = document.getElementById('servicoData');
+                const dataStatus = document.getElementById('dataStatus');
+                const dataHint = document.getElementById('dataHint');
+                const dataError = document.getElementById('dataError');
+                const dataGroup = document.getElementById('dataGroup');
+
+                dataInput.addEventListener('change', () => {
+                    const validation = validateData(dataInput.value);
+                    if (validation.isValid) {
+                        dataInput.className = 'valid';
+                        dataStatus.textContent = '✅';
+                        dataStatus.className = 'input-status valid';
+                        dataHint.className = 'input-hint success-hint';
+                        dataHint.textContent = 'Data selecionada ✓';
+                        dataError.style.display = 'none';
+                    } else {
+                        dataInput.className = '';
+                        dataStatus.textContent = '';
+                        dataStatus.className = 'input-status';
+                        dataHint.className = 'input-hint';
+                        dataHint.textContent = 'Selecione a data do serviço';
+                        dataError.style.display = 'none';
+                    }
+                });
+
+                // Valor - máscara
+                const valorInput = document.getElementById('servicoValor');
+                const valorHint = document.getElementById('valorHint');
+
+                valorInput.addEventListener('input', () => {
+                    const cursorPos = valorInput.selectionStart;
+                    const rawValue = valorInput.value;
+                    // Remove formatação para pegar apenas números
+                    const numbers = rawValue.replace(/\D/g, '');
+                    
+                    if (numbers === '') {
+                        valorInput.value = '';
+                        valorHint.className = 'input-hint';
+                        valorHint.textContent = 'Use vírgula para centavos (ex: 150,50)';
+                        return;
+                    }
+
+                    // Formata como moeda
+                    const formatted = formatCurrency(numbers);
+                    valorInput.value = formatted;
+
+                    // Ajusta o cursor
+                    const newPos = cursorPos + (formatted.length - rawValue.length);
+                    if (newPos > 0 && newPos <= formatted.length) {
+                        valorInput.setSelectionRange(newPos, newPos);
+                    }
+
+                    // Valida o valor
+                    const parsed = parseCurrency(formatted);
+                    if (parsed !== null && parsed > 0) {
+                        valorHint.className = 'input-hint success-hint';
+                        valorHint.textContent = `Valor: R$ ${formatted} ✓`;
+                    } else {
+                        valorHint.className = 'input-hint';
+                        valorHint.textContent = 'Use vírgula para centavos (ex: 150,50)';
+                    }
+                });
+
+                // Descrição - contador
+                const descricaoInput = document.getElementById('servicoDescricao');
+                const descricaoCounter = document.getElementById('descricaoCounter');
+
+                descricaoInput.addEventListener('input', () => {
+                    const length = descricaoInput.value.length;
+                    descricaoCounter.textContent = `${length}/500`;
+
+                    if (length > 450) {
+                        descricaoCounter.className = 'char-counter limit';
+                    } else {
+                        descricaoCounter.className = 'char-counter';
+                    }
+                });
+            }
+
             validateForm() {
                 let isValid = true;
 
+                // Cliente
                 const cliente = document.getElementById('servicoCliente');
                 const clienteError = document.getElementById('clienteError');
+                const clienteStatus = document.getElementById('clienteStatus');
+                const clienteHint = document.getElementById('clienteHint');
+
                 if (!cliente.value) {
-                    cliente.style.borderColor = '#f44336';
+                    cliente.className = 'invalid shake';
                     clienteError.style.display = 'block';
+                    clienteStatus.textContent = '❌';
+                    clienteStatus.className = 'input-status invalid';
+                    clienteHint.className = 'input-hint error-hint';
+                    clienteHint.textContent = 'Selecione um cliente!';
                     isValid = false;
-                } else {
-                    cliente.style.borderColor = '';
-                    clienteError.style.display = 'none';
                 }
 
+                // Nome
                 const nome = document.getElementById('servicoNome');
                 const nomeError = document.getElementById('nomeError');
+                const nomeStatus = document.getElementById('nomeStatus');
+                const nomeHint = document.getElementById('nomeHint');
+
                 if (!nome.value.trim()) {
-                    nome.style.borderColor = '#f44336';
+                    nome.className = 'invalid shake';
                     nomeError.style.display = 'block';
+                    nomeStatus.textContent = '❌';
+                    nomeStatus.className = 'input-status invalid';
+                    nomeHint.className = 'input-hint error-hint';
+                    nomeHint.textContent = 'Nome do serviço é obrigatório!';
                     isValid = false;
-                } else {
-                    nome.style.borderColor = '';
-                    nomeError.style.display = 'none';
                 }
 
+                // Data
                 const data = document.getElementById('servicoData');
                 const dataError = document.getElementById('dataError');
+                const dataStatus = document.getElementById('dataStatus');
+                const dataHint = document.getElementById('dataHint');
+
                 if (!data.value) {
-                    data.style.borderColor = '#f44336';
+                    data.className = 'invalid shake';
                     dataError.style.display = 'block';
+                    dataStatus.textContent = '❌';
+                    dataStatus.className = 'input-status invalid';
+                    dataHint.className = 'input-hint error-hint';
+                    dataHint.textContent = 'Data é obrigatória!';
                     isValid = false;
-                } else {
-                    data.style.borderColor = '';
-                    dataError.style.display = 'none';
                 }
 
                 return isValid;
@@ -519,6 +871,11 @@
 
                 if (!this.validateForm()) {
                     window.showToast('Preencha os campos corretamente.', 'error');
+                    const firstError = document.querySelector('.form-group input.invalid, .form-group select.invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
                     return;
                 }
 
@@ -527,7 +884,8 @@
                 const nome = document.getElementById('servicoNome').value.trim();
                 const descricao = document.getElementById('servicoDescricao').value.trim();
                 const data = document.getElementById('servicoData').value;
-                const valor = parseFloat(document.getElementById('servicoValor').value) || null;
+                const valorRaw = document.getElementById('servicoValor').value;
+                const valor = parseCurrency(valorRaw);
                 const status = document.getElementById('servicoStatus').value;
 
                 const servicoData = {
@@ -622,7 +980,17 @@
 
                 document.querySelectorAll('.form-error').forEach(e => e.style.display = 'none');
                 document.querySelectorAll('#servicoForm input, #servicoForm select, #servicoForm textarea').forEach(el => {
-                    el.style.borderColor = '';
+                    el.className = '';
+                });
+                document.querySelectorAll('.input-status').forEach(el => {
+                    el.textContent = '';
+                    el.className = 'input-status';
+                });
+                document.querySelectorAll('.input-hint').forEach(el => {
+                    el.className = 'input-hint';
+                });
+                document.querySelectorAll('.char-counter').forEach(el => {
+                    el.className = 'char-counter';
                 });
 
                 if (data) {
@@ -631,9 +999,40 @@
                     document.getElementById('servicoNome').value = data.servico;
                     document.getElementById('servicoDescricao').value = data.descricao || '';
                     document.getElementById('servicoData').value = data.data;
-                    document.getElementById('servicoValor').value = data.valor || '';
+                    document.getElementById('servicoValor').value = data.valor ? `R$ ${data.valor.toFixed(2)}`.replace('.', ',') : '';
                     document.getElementById('servicoStatus').value = data.status;
                     document.getElementById('modalTitle').textContent = 'Editar Serviço';
+                    
+                    // Atualizar contadores
+                    document.getElementById('nomeCounter').textContent = `${(data.servico || '').length}/100`;
+                    document.getElementById('descricaoCounter').textContent = `${(data.descricao || '').length}/500`;
+                    
+                    // Atualizar hints
+                    if (data.cliente_id) {
+                        document.getElementById('clienteHint').textContent = 'Cliente selecionado ✓';
+                        document.getElementById('clienteHint').className = 'input-hint success-hint';
+                        document.getElementById('clienteStatus').textContent = '✅';
+                        document.getElementById('clienteStatus').className = 'input-status valid';
+                        document.getElementById('servicoCliente').className = 'valid';
+                    }
+                    if (data.servico) {
+                        document.getElementById('nomeHint').textContent = 'Válido ✓';
+                        document.getElementById('nomeHint').className = 'input-hint success-hint';
+                        document.getElementById('nomeStatus').textContent = '✅';
+                        document.getElementById('nomeStatus').className = 'input-status valid';
+                        document.getElementById('servicoNome').className = 'valid';
+                    }
+                    if (data.data) {
+                        document.getElementById('dataHint').textContent = 'Data selecionada ✓';
+                        document.getElementById('dataHint').className = 'input-hint success-hint';
+                        document.getElementById('dataStatus').textContent = '✅';
+                        document.getElementById('dataStatus').className = 'input-status valid';
+                        document.getElementById('servicoData').className = 'valid';
+                    }
+                    if (data.valor) {
+                        document.getElementById('valorHint').textContent = `Valor: R$ ${data.valor.toFixed(2)} ✓`;
+                        document.getElementById('valorHint').className = 'input-hint success-hint';
+                    }
                 } else {
                     document.getElementById('servicoId').value = '';
                     document.getElementById('servicoCliente').value = '';
@@ -643,6 +1042,9 @@
                     document.getElementById('servicoValor').value = '';
                     document.getElementById('servicoStatus').value = 'pendente';
                     document.getElementById('modalTitle').textContent = 'Novo Serviço';
+                    
+                    document.getElementById('nomeCounter').textContent = '0/100';
+                    document.getElementById('descricaoCounter').textContent = '0/500';
                 }
 
                 modal.style.display = 'flex';
@@ -676,7 +1078,7 @@
                 document.getElementById('novoServicoBtn')?.addEventListener('click', () => this.openModal());
                 document.getElementById('closeServicoModal')?.addEventListener('click', () => this.closeModal());
                 document.getElementById('closeServicoModalBtn')?.addEventListener('click', () => this.closeModal());
-                
+
                 document.getElementById('saveServicoBtn')?.addEventListener('click', () => {
                     console.log('🖱️ Botão Salvar clicado!');
                     this.saveServico();
@@ -743,4 +1145,5 @@
         console.log('✅ Serviços inicializado!');
     </script>
 </body>
+
 </html>

@@ -809,3 +809,126 @@
 .bottom-nav a:hover i {
     transform: scale(1.1);
 }
+/* Adicione ao servicos.css */
+
+/* Estilos de validação */
+.form-group .input-hint {
+    font-size: 11px;
+    color: var(--gray-400);
+    margin-top: 3px;
+    display: block;
+    transition: var(--transition);
+}
+
+.form-group .input-hint.error-hint {
+    color: #f44336;
+}
+
+.form-group .input-hint.success-hint {
+    color: #4CAF50;
+}
+
+.form-group .char-counter {
+    font-size: 11px;
+    color: var(--gray-400);
+    text-align: right;
+    margin-top: 2px;
+    transition: var(--transition);
+}
+
+.form-group .char-counter.limit {
+    color: #f44336;
+}
+
+.form-group input.valid,
+.form-group textarea.valid,
+.form-group select.valid {
+    border-color: #4CAF50;
+    background: #F1F8E9;
+}
+
+.form-group input.invalid,
+.form-group textarea.invalid,
+.form-group select.invalid {
+    border-color: #f44336;
+    background: #FFF5F5;
+}
+
+.form-group input:focus.valid,
+.form-group textarea:focus.valid,
+.form-group select:focus.valid {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.form-group input:focus.invalid,
+.form-group textarea:focus.invalid,
+.form-group select:focus.invalid {
+    border-color: #f44336;
+    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+.form-group .input-icon-container {
+    position: relative;
+}
+
+.form-group .input-icon-container .input-status {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    pointer-events: none;
+    transition: var(--transition);
+}
+
+.form-group .input-icon-container .input-status.valid {
+    color: #4CAF50;
+}
+
+.form-group .input-icon-container .input-status.invalid {
+    color: #f44336;
+}
+
+.form-group textarea+.input-status {
+    top: 14px;
+    transform: none;
+}
+
+@keyframes shakeInput {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.form-group input.shake,
+.form-group select.shake,
+.form-group textarea.shake {
+    animation: shakeInput 0.3s ease;
+}
+
+/* Estilo para o campo de valor com máscara */
+.form-group .currency-input {
+    position: relative;
+}
+
+.form-group .currency-input .currency-symbol {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-500);
+    font-weight: 600;
+    font-size: 15px;
+    pointer-events: none;
+}
+
+.form-group .currency-input input {
+    padding-left: 28px;
+}
+
+@media (max-width: 480px) {
+    .form-group .input-hint {
+        font-size: 10px;
+    }
+}

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -15,6 +16,7 @@
             flex-direction: column;
             gap: 16px;
         }
+
         .loading-spinner {
             width: 40px;
             height: 40px;
@@ -23,15 +25,184 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
         .loading-text {
             color: var(--gray-500);
             font-size: 14px;
         }
+
+        /* Estilos para os cards de serviço */
+        .servico-item {
+            background: var(--white);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .servico-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
+        }
+
+        .servico-item .servico-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .servico-item .servico-info .servico-nome {
+            font-weight: 500;
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .servico-item .servico-info .servico-cliente {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .servico-item .servico-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .servico-item .servico-meta .servico-valor {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .servico-item .servico-meta .servico-status {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .servico-item .servico-meta .servico-status.pendente {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .servico-item .servico-meta .servico-status.concluido {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .servico-item .servico-meta .servico-status.cancelado {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .servico-item .servico-meta .servico-data {
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        /* Estilos para notas */
+        .nota-item {
+            background: var(--white);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4CAF50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .nota-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
+        }
+
+        .nota-item .nota-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .nota-item .nota-info .nota-servico {
+            font-weight: 500;
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .nota-item .nota-info .nota-cliente {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .nota-item .nota-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .nota-item .nota-meta .nota-valor {
+            font-weight: 600;
+            color: #4CAF50;
+            font-size: 14px;
+        }
+
+        .nota-item .nota-meta .nota-numero {
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        .nota-item .nota-meta .nota-data {
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        .nota-item .nota-meta .nota-arquivo {
+            color: var(--primary);
+            font-size: 16px;
+            text-decoration: none;
+        }
+
+        /* Responsividade */
+        @media (max-width: 480px) {
+            .servico-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .servico-item .servico-meta {
+                justify-content: space-between;
+            }
+
+            .nota-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nota-item .nota-meta {
+                justify-content: space-between;
+            }
+        }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -51,27 +222,60 @@
                 <span class="loading-text">Carregando dados...</span>
             </div>
 
-            <!-- Conteúdo do Dashboard (inicialmente oculto) -->
+            <!-- Conteúdo do Dashboard -->
             <div id="dashboardData" style="display: none;">
+                <!-- Stats Grid - 8 cards -->
                 <div class="stats-grid" id="dashboardStats">
+                    <!-- Clientes -->
                     <div class="stat-card">
                         <div class="stat-value primary" id="totalClientes">0</div>
                         <div class="stat-label">Clientes</div>
                     </div>
+                    
+                    <!-- Serviços Concluídos -->
                     <div class="stat-card">
-                        <div class="stat-value" id="totalServicos">0</div>
-                        <div class="stat-label">Serviços</div>
+                        <div class="stat-value success" id="servicosConcluidos">0</div>
+                        <div class="stat-label">Concluídos</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-value success" id="totalNotas">0</div>
-                        <div class="stat-label">Notas Fiscais</div>
-                    </div>
+                    
+                    <!-- Serviços Pendentes -->
                     <div class="stat-card">
                         <div class="stat-value warning" id="servicosPendentes">0</div>
                         <div class="stat-label">Pendentes</div>
                     </div>
+                    
+                    <!-- Serviços Cancelados -->
+                    <div class="stat-card">
+                        <div class="stat-value danger" id="servicosCancelados">0</div>
+                        <div class="stat-label">Cancelados</div>
+                    </div>
+                    
+                    <!-- Total de Serviços -->
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalServicos">0</div>
+                        <div class="stat-label">Total Serviços</div>
+                    </div>
+                    
+                    <!-- Notas Fiscais -->
+                    <div class="stat-card">
+                        <div class="stat-value success" id="totalNotas">0</div>
+                        <div class="stat-label">Notas Fiscais</div>
+                    </div>
+                    
+                    <!-- Valor Recebido -->
+                    <div class="stat-card">
+                        <div class="stat-value success" id="valorRecebido">R$ 0,00</div>
+                        <div class="stat-label">Valor Recebido</div>
+                    </div>
+                    
+                    <!-- Valor a Receber -->
+                    <div class="stat-card">
+                        <div class="stat-value warning" id="valorAReceber">R$ 0,00</div>
+                        <div class="stat-label">Valor a Receber</div>
+                    </div>
                 </div>
 
+                <!-- Últimos Serviços -->
                 <div style="margin-top: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="font-size: 16px; color: var(--gray-700);">📋 Últimos Serviços</h3>
@@ -84,6 +288,7 @@
                     </div>
                 </div>
 
+                <!-- Últimas Notas -->
                 <div style="margin-top: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="font-size: 16px; color: var(--gray-700);">📄 Últimas Notas</h3>
@@ -127,25 +332,20 @@
         console.log('🚀 Inicializando Dashboard...');
 
         try {
-            // Verificar autenticação
-            console.log('🔍 Verificando autenticação...');
             const user = await AuthService.checkAuth();
-            
+
             if (user) {
                 console.log('✅ Usuário autenticado:', user.nome || user.email);
                 document.getElementById('userName').textContent = user.nome || 'Usuário';
                 document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
-                
-                // Inicializar ícones
+
                 if (window.lucide) {
                     lucide.createIcons();
                 }
 
-                // Inicializar Dashboard
                 console.log('📊 Carregando dados do dashboard...');
                 const dashboard = new Dashboard();
-                
-                // Mostrar conteúdo após carregar
+
                 document.getElementById('loadingDashboard').style.display = 'none';
                 document.getElementById('dashboardData').style.display = 'block';
             } else {
@@ -165,4 +365,5 @@
         }
     </script>
 </body>
+
 </html>
