@@ -7,6 +7,293 @@
     <title>ERENALDO - Serviços</title>
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/servicos.css">
+    <style>
+        /* ============================================
+           TOGGLE DE PAGAMENTO
+           ============================================ */
+        .payment-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+            padding: 6px 12px;
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+        .payment-toggle:hover {
+            border-color: var(--gray-300);
+        }
+
+        .payment-toggle .toggle-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .payment-toggle .toggle-label i {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Switch personalizado */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ccc;
+            transition: var(--transition);
+            border-radius: 24px;
+        }
+
+        .switch .slider::before {
+            content: "";
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: var(--transition);
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .switch input:checked+.slider {
+            background: #4CAF50;
+        }
+
+        .switch input:checked+.slider::before {
+            transform: translateX(20px);
+        }
+
+        .switch input:disabled+.slider {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .switch .slider.pago {
+            background: #4CAF50;
+        }
+
+        .switch .slider.pago::before {
+            transform: translateX(20px);
+        }
+
+        .payment-status {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        .payment-status.pago {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .payment-status.nao-pago {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .payment-status.nao-aplicavel {
+            background: var(--gray-200);
+            color: var(--gray-500);
+        }
+
+        /* Badge de status do serviço com indicador de pagamento */
+        .servico-card .card-header .status-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .servico-card .card-header .status-group .badge-status {
+            position: relative;
+        }
+
+        .servico-card .card-header .status-group .payment-indicator {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .servico-card .card-header .status-group .payment-indicator.pago {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .servico-card .card-header .status-group .payment-indicator.nao-pago {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .servico-card .card-header .status-group .payment-indicator.nao-aplicavel {
+            background: var(--gray-200);
+            color: var(--gray-500);
+        }
+
+        /* Toggle no card de serviço */
+        .servico-card .card-payment-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--gray-100);
+            margin-top: 4px;
+        }
+
+        .servico-card .card-payment-toggle .toggle-info {
+            font-size: 12px;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .servico-card .card-payment-toggle .toggle-info i {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 480px) {
+            .payment-toggle {
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 8px 12px;
+            }
+
+            .payment-toggle .toggle-label {
+                font-size: 11px;
+            }
+
+            .switch {
+                width: 40px;
+                height: 22px;
+            }
+
+            .switch .slider::before {
+                height: 16px;
+                width: 16px;
+                left: 3px;
+                bottom: 3px;
+            }
+
+            .switch input:checked+.slider::before {
+                transform: translateX(18px);
+            }
+
+            .servico-card .card-header .status-group {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 4px;
+            }
+
+            .servico-card .card-payment-toggle {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+
+            .servico-card .card-payment-toggle .toggle-info {
+                justify-content: center;
+            }
+        }
+
+        /* Estilos para o toggle no modal */
+        .form-group .payment-toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .form-group .payment-toggle-group label {
+            margin-bottom: 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group .payment-toggle-group label i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .form-group .payment-toggle-group .switch {
+            width: 44px;
+            height: 24px;
+        }
+
+        .form-group .payment-toggle-group .switch .slider::before {
+            height: 18px;
+            width: 18px;
+        }
+
+        .form-group .payment-toggle-group .switch input:checked+.slider::before {
+            transform: translateX(20px);
+        }
+
+        .form-group .payment-toggle-group .payment-status-text {
+            font-size: 13px;
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 12px;
+        }
+
+        .form-group .payment-toggle-group .payment-status-text.pago {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .form-group .payment-toggle-group .payment-status-text.nao-pago {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        @media (max-width: 480px) {
+            .form-group .payment-toggle-group {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -40,15 +327,13 @@
                     <div class="stat-value total" id="valorTotalServicos">R$ 0,00</div>
                     <div class="stat-label">Valor Total</div>
                 </div>
-                <!-- NOVO CARD: Valor a Receber -->
                 <div class="stat-card destaque">
                     <div class="stat-value receber" id="valorAReceber">R$ 0,00</div>
-                    <div class="stat-label"> Valor a Receber</div>
+                    <div class="stat-label">💰 Valor a Receber</div>
                 </div>
-                <!-- NOVO CARD: Valor Recebido -->
                 <div class="stat-card">
                     <div class="stat-value recebido" id="valorRecebido">R$ 0,00</div>
-                    <div class="stat-label"> Valor Recebido</div>
+                    <div class="stat-label">✅ Valor Recebido</div>
                 </div>
             </div>
 
@@ -205,6 +490,23 @@
                         <option value="concluido">✅ Concluído</option>
                         <option value="cancelado">❌ Cancelado</option>
                     </select>
+                </div>
+
+                <!-- Pagamento (novo campo) -->
+                <div class="form-group" id="pagamentoGroup">
+                    <label>💳 Situação do Pagamento</label>
+                    <div class="payment-toggle-group">
+                        <label>
+                            <i data-lucide="credit-card"></i>
+                            Pagamento Recebido?
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="servicoPago">
+                            <span class="slider" id="pagamentoSlider"></span>
+                        </label>
+                        <span class="payment-status-text nao-pago" id="pagamentoStatusText">Não pago</span>
+                    </div>
+                    <span class="input-hint" id="pagamentoHint">Marque quando o pagamento for recebido</span>
                 </div>
             </form>
             <div class="modal-footer">
@@ -367,6 +669,7 @@
                 this.loadServicos();
                 this.setupEvents();
                 this.setupRealtimeValidation();
+                this.setupPaymentToggle();
             }
 
             async loadClientes() {
@@ -481,14 +784,26 @@
                     'cancelado': 'Cancelado'
                 };
 
-                container.innerHTML = this.servicos.map(s => `
+                container.innerHTML = this.servicos.map(s => {
+                    const isPago = s.pago === true;
+                    const pagoStatus = isPago ? 'pago' : 'nao-pago';
+                    const pagoLabel = isPago ? '✅ Pago' : '⏳ Aguardando pagamento';
+                    
+                    return `
                     <div class="servico-card" data-id="${s.id}">
                         <div class="card-header">
                             <h3>${s.servico}</h3>
-                            <span class="badge-status ${s.status}">
-                                <i data-lucide="${s.status === 'pendente' ? 'clock' : s.status === 'concluido' ? 'check-circle' : 'x-circle'}"></i>
-                                ${statusLabels[s.status] || s.status}
-                            </span>
+                            <div class="status-group">
+                                <span class="badge-status ${s.status}">
+                                    <i data-lucide="${s.status === 'pendente' ? 'clock' : s.status === 'concluido' ? 'check-circle' : 'x-circle'}"></i>
+                                    ${statusLabels[s.status] || s.status}
+                                </span>
+                                ${s.status === 'concluido' ? `
+                                    <span class="payment-indicator ${pagoStatus}">
+                                        ${isPago ? '💰 Pago' : '⏳ A Pagar'}
+                                    </span>
+                                ` : ''}
+                            </div>
                         </div>
                         <div class="card-body">
                             <p><strong>Cliente:</strong> ${s.clientes?.nome || 'Não informado'}</p>
@@ -496,6 +811,19 @@
                             ${s.descricao ? `<p><strong>Descrição:</strong> ${s.descricao}</p>` : ''}
                             ${s.valor ? `<p><strong>Valor:</strong> R$ ${s.valor.toFixed(2)}</p>` : ''}
                         </div>
+                        ${s.status === 'concluido' ? `
+                            <div class="card-payment-toggle">
+                                <span class="toggle-info">
+                                    <i data-lucide="credit-card"></i>
+                                    Pagamento: <strong>${isPago ? '✅ Recebido' : '⏳ Pendente'}</strong>
+                                </span>
+                                <label class="switch">
+                                    <input type="checkbox" class="toggle-pagamento" data-id="${s.id}" 
+                                           ${isPago ? 'checked' : ''}>
+                                    <span class="slider ${isPago ? 'pago' : ''}"></span>
+                                </label>
+                            </div>
+                        ` : ''}
                         <div class="card-footer">
                             <button class="btn btn-primary btn-sm btn-edit" data-id="${s.id}">
                                 <i data-lucide="edit-2"></i> Editar
@@ -510,10 +838,11 @@
                             </button>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
 
                 if (window.lucide) lucide.createIcons();
 
+                // Event listeners para os botões
                 container.querySelectorAll('.btn-edit').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const id = btn.dataset.id;
@@ -537,6 +866,34 @@
                         });
                     });
                 });
+
+                // Event listeners para os toggles de pagamento
+                container.querySelectorAll('.toggle-pagamento').forEach(toggle => {
+                    toggle.addEventListener('change', (e) => {
+                        const id = e.target.dataset.id;
+                        const pago = e.target.checked;
+                        this.togglePagamento(id, pago);
+                    });
+                });
+            }
+
+            async togglePagamento(id, pago) {
+                try {
+                    console.log(`💰 Alterando pagamento do serviço ${id} para ${pago ? 'PAGO' : 'NÃO PAGO'}`);
+                    
+                    const { error } = await supabase
+                        .from('servicos')
+                        .update({ pago: pago })
+                        .eq('id', id);
+
+                    if (error) throw error;
+
+                    window.showToast(pago ? '✅ Pagamento registrado!' : '⏳ Pagamento pendente', 'success');
+                    await this.loadServicos();
+                } catch (error) {
+                    console.error('❌ Erro ao atualizar pagamento:', error);
+                    window.showToast('Erro ao atualizar pagamento: ' + error.message, 'error');
+                }
             }
 
             updateStats() {
@@ -544,11 +901,15 @@
                 const concluidos = this.servicos.filter(s => s.status === 'concluido').length;
                 const pendentes = this.servicos.filter(s => s.status === 'pendente').length;
                 const valorTotal = this.servicos.reduce((sum, s) => sum + (s.valor || 0), 0);
+                
+                // Valor Recebido = serviços concluídos E pagos
                 const valorRecebido = this.servicos
-                    .filter(s => s.status === 'concluido')
+                    .filter(s => s.status === 'concluido' && s.pago === true)
                     .reduce((sum, s) => sum + (s.valor || 0), 0);
+                
+                // Valor a Receber = serviços concluídos E NÃO pagos + serviços pendentes
                 const valorAReceber = this.servicos
-                    .filter(s => s.status === 'pendente')
+                    .filter(s => (s.status === 'concluido' && s.pago !== true) || s.status === 'pendente')
                     .reduce((sum, s) => sum + (s.valor || 0), 0);
 
                 document.getElementById('totalServicos').textContent = total;
@@ -557,6 +918,27 @@
                 document.getElementById('valorTotalServicos').textContent = `R$ ${valorTotal.toFixed(2)}`;
                 document.getElementById('valorRecebido').textContent = `R$ ${valorRecebido.toFixed(2)}`;
                 document.getElementById('valorAReceber').textContent = `R$ ${valorAReceber.toFixed(2)}`;
+            }
+
+            setupPaymentToggle() {
+                // Toggle do pagamento no modal
+                const pagoCheckbox = document.getElementById('servicoPago');
+                const pagamentoStatusText = document.getElementById('pagamentoStatusText');
+                const pagamentoSlider = document.getElementById('pagamentoSlider');
+
+                if (pagoCheckbox) {
+                    pagoCheckbox.addEventListener('change', () => {
+                        if (pagoCheckbox.checked) {
+                            pagamentoStatusText.textContent = '✅ Pago';
+                            pagamentoStatusText.className = 'payment-status-text pago';
+                            pagamentoSlider.classList.add('pago');
+                        } else {
+                            pagamentoStatusText.textContent = '⏳ Não pago';
+                            pagamentoStatusText.className = 'payment-status-text nao-pago';
+                            pagamentoSlider.classList.remove('pago');
+                        }
+                    });
+                }
             }
 
             setupRealtimeValidation() {
@@ -762,6 +1144,7 @@
                 const valorRaw = document.getElementById('servicoValor').value;
                 const valor = parseCurrency(valorRaw);
                 const status = document.getElementById('servicoStatus').value;
+                const pago = document.getElementById('servicoPago').checked;
 
                 const servicoData = {
                     cliente_id: clienteId,
@@ -769,7 +1152,8 @@
                     descricao: descricao || null,
                     data: data,
                     valor: valor,
-                    status: status
+                    status: status,
+                    pago: pago
                 };
 
                 console.log('📦 Dados:', servicoData);
@@ -868,6 +1252,11 @@
                     el.className = 'char-counter';
                 });
 
+                // Resetar toggle de pagamento
+                const pagoCheckbox = document.getElementById('servicoPago');
+                const pagamentoStatusText = document.getElementById('pagamentoStatusText');
+                const pagamentoSlider = document.getElementById('pagamentoSlider');
+
                 if (data) {
                     document.getElementById('servicoId').value = data.id;
                     document.getElementById('servicoCliente').value = data.cliente_id;
@@ -877,6 +1266,19 @@
                     document.getElementById('servicoValor').value = data.valor ? `R$ ${data.valor.toFixed(2)}`.replace('.', ',') : '';
                     document.getElementById('servicoStatus').value = data.status;
                     document.getElementById('modalTitle').textContent = 'Editar Serviço';
+
+                    // Configurar toggle de pagamento
+                    const isPago = data.pago === true;
+                    pagoCheckbox.checked = isPago;
+                    if (isPago) {
+                        pagamentoStatusText.textContent = '✅ Pago';
+                        pagamentoStatusText.className = 'payment-status-text pago';
+                        pagamentoSlider.classList.add('pago');
+                    } else {
+                        pagamentoStatusText.textContent = '⏳ Não pago';
+                        pagamentoStatusText.className = 'payment-status-text nao-pago';
+                        pagamentoSlider.classList.remove('pago');
+                    }
 
                     document.getElementById('nomeCounter').textContent = `${(data.servico || '').length}/100`;
                     document.getElementById('descricaoCounter').textContent = `${(data.descricao || '').length}/500`;
@@ -915,6 +1317,12 @@
                     document.getElementById('servicoValor').value = '';
                     document.getElementById('servicoStatus').value = 'pendente';
                     document.getElementById('modalTitle').textContent = 'Novo Serviço';
+
+                    // Resetar toggle de pagamento
+                    pagoCheckbox.checked = false;
+                    pagamentoStatusText.textContent = '⏳ Não pago';
+                    pagamentoStatusText.className = 'payment-status-text nao-pago';
+                    pagamentoSlider.classList.remove('pago');
 
                     document.getElementById('nomeCounter').textContent = '0/100';
                     document.getElementById('descricaoCounter').textContent = '0/500';

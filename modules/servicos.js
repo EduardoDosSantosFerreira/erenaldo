@@ -18,6 +18,7 @@ export class ServicosManager {
         await this.loadClientes();
         await this.loadServicos();
         this.setupEventListeners();
+        this.setupPaymentToggle();
     }
 
     async loadClientes() {
@@ -154,14 +155,25 @@ export class ServicosManager {
             'cancelado': 'Cancelado'
         };
 
-        container.innerHTML = this.servicos.map(servico => `
+        container.innerHTML = this.servicos.map(servico => {
+            const isPago = servico.pago === true;
+            const pagoStatus = isPago ? 'pago' : 'nao-pago';
+            
+            return `
             <div class="servico-card" data-id="${servico.id}">
                 <div class="card-header">
                     <h3>${servico.servico || 'Sem título'}</h3>
-                    <span class="badge-status ${servico.status || 'pendente'}">
-                        <i data-lucide="${servico.status === 'pendente' ? 'clock' : servico.status === 'concluido' ? 'check-circle' : 'x-circle'}"></i>
-                        ${statusLabels[servico.status] || servico.status}
-                    </span>
+                    <div class="status-group">
+                        <span class="badge-status ${servico.status || 'pendente'}">
+                            <i data-lucide="${servico.status === 'pendente' ? 'clock' : servico.status === 'concluido' ? 'check-circle' : 'x-circle'}"></i>
+                            ${statusLabels[servico.status] || servico.status}
+                        </span>
+                        ${servico.status === 'concluido' ? `
+                            <span class="payment-indicator ${pagoStatus}">
+                                ${isPago ? '💰 Pago' : '⏳ A Pagar'}
+                            </span>
+                        ` : ''}
+                    </div>
                 </div>
                 <div class="card-body">
                     <p><strong>Cliente:</strong> <span class="cliente-nome">${servico.clientes?.nome || 'Não informado'}</span></p>
@@ -169,6 +181,19 @@ export class ServicosManager {
                     ${servico.descricao ? `<p><strong>Descrição:</strong> ${servico.descricao}</p>` : ''}
                     ${servico.valor ? `<p><strong>Valor:</strong> <span class="valor">R$ ${servico.valor.toFixed(2)}</span></p>` : ''}
                 </div>
+                ${servico.status === 'concluido' ? `
+                    <div class="card-payment-toggle">
+                        <span class="toggle-info">
+                            <i data-lucide="credit-card"></i>
+                            Pagamento: <strong>${isPago ? '✅ Recebido' : '⏳ Pendente'}</strong>
+                        </span>
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-pagamento" data-id="${servico.id}" 
+                                   ${isPago ? 'checked' : ''}>
+                            <span class="slider ${isPago ? 'pago' : ''}"></span>
+                        </label>
+                    </div>
+                ` : ''}
                 <div class="card-footer">
                     <button class="btn btn-primary btn-sm btn-edit" data-id="${servico.id}">
                         <i data-lucide="edit-2"></i>
@@ -186,7 +211,7 @@ export class ServicosManager {
                     </button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
 
         if (window.lucide) lucide.createIcons();
 
@@ -221,6 +246,64 @@ export class ServicosManager {
                 }
             });
         });
+
+        // Event listeners para os toggles de pagamento
+        container.querySelectorAll('.toggle-pagamento').forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                e.stopPropagation();
+                const id = e.target.dataset.id;
+                const pago = e.target.checked;
+                this.togglePagamento(id, pago);
+            });
+        });
+    }
+
+    async togglePagamento(id, pago) {
+        try {
+            console.log(`💰 Alterando pagamento do serviço ${id} para ${pago ? 'PAGO' : 'NÃO PAGO'}`);
+            
+            const { error } = await supabase
+                .from('servicos')
+                .update({ pago: pago })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            this.showNotification(pago ? '✅ Pagamento registrado como recebido!' : '⏳ Pagamento marcado como pendente', 'success');
+            await this.loadServicos();
+        } catch (error) {
+            console.error('❌ Erro ao atualizar pagamento:', error);
+            this.showNotification('Erro ao atualizar pagamento: ' + error.message, 'error');
+        }
+    }
+
+    setupPaymentToggle() {
+        // Toggle do pagamento no modal
+        const pagoCheckbox = document.getElementById('servicoPago');
+        const pagamentoStatusText = document.getElementById('pagamentoStatusText');
+        const pagamentoSlider = document.getElementById('pagamentoSlider');
+
+        if (pagoCheckbox) {
+            pagoCheckbox.addEventListener('change', () => {
+                if (pagoCheckbox.checked) {
+                    if (pagamentoStatusText) {
+                        pagamentoStatusText.textContent = '✅ Pago';
+                        pagamentoStatusText.className = 'payment-status-text pago';
+                    }
+                    if (pagamentoSlider) {
+                        pagamentoSlider.classList.add('pago');
+                    }
+                } else {
+                    if (pagamentoStatusText) {
+                        pagamentoStatusText.textContent = '⏳ Não pago';
+                        pagamentoStatusText.className = 'payment-status-text nao-pago';
+                    }
+                    if (pagamentoSlider) {
+                        pagamentoSlider.classList.remove('pago');
+                    }
+                }
+            });
+        }
     }
 
     updateStats() {
@@ -228,11 +311,23 @@ export class ServicosManager {
         const concluidos = this.servicos.filter(s => s.status === 'concluido').length;
         const pendentes = this.servicos.filter(s => s.status === 'pendente').length;
         const valorTotal = this.servicos.reduce((sum, s) => sum + (s.valor || 0), 0);
+        
+        // Valor Recebido = serviços concluídos E pagos
+        const valorRecebido = this.servicos
+            .filter(s => s.status === 'concluido' && s.pago === true)
+            .reduce((sum, s) => sum + (s.valor || 0), 0);
+        
+        // Valor a Receber = serviços pendentes + serviços concluídos E NÃO pagos
+        const valorAReceber = this.servicos
+            .filter(s => (s.status === 'pendente') || (s.status === 'concluido' && s.pago !== true))
+            .reduce((sum, s) => sum + (s.valor || 0), 0);
 
         document.getElementById('totalServicos').textContent = total;
         document.getElementById('servicosConcluidos').textContent = concluidos;
         document.getElementById('servicosPendentes').textContent = pendentes;
         document.getElementById('valorTotalServicos').textContent = `R$ ${valorTotal.toFixed(2)}`;
+        document.getElementById('valorRecebido').textContent = `R$ ${valorRecebido.toFixed(2)}`;
+        document.getElementById('valorAReceber').textContent = `R$ ${valorAReceber.toFixed(2)}`;
     }
 
     async createServico(data) {
@@ -300,7 +395,7 @@ export class ServicosManager {
 
             if (error) throw error;
 
-            this.showNotification('Serviço concluído com sucesso!', 'success');
+            this.showNotification('Serviço concluído com sucesso! ✅', 'success');
             await this.loadServicos();
         } catch (error) {
             console.error('❌ Erro ao concluir serviço:', error);
@@ -314,6 +409,11 @@ export class ServicosManager {
 
         this.populateClienteSelects();
 
+        // Resetar estado do toggle de pagamento
+        const pagoCheckbox = document.getElementById('servicoPago');
+        const pagamentoStatusText = document.getElementById('pagamentoStatusText');
+        const pagamentoSlider = document.getElementById('pagamentoSlider');
+
         if (data) {
             document.getElementById('servicoId').value = data.id;
             document.getElementById('servicoCliente').value = data.cliente_id;
@@ -323,6 +423,29 @@ export class ServicosManager {
             document.getElementById('servicoValor').value = data.valor || '';
             document.getElementById('servicoStatus').value = data.status;
             document.getElementById('modalTitle').textContent = 'Editar Serviço';
+
+            // Configurar toggle de pagamento
+            const isPago = data.pago === true;
+            if (pagoCheckbox) {
+                pagoCheckbox.checked = isPago;
+            }
+            if (isPago) {
+                if (pagamentoStatusText) {
+                    pagamentoStatusText.textContent = '✅ Pago';
+                    pagamentoStatusText.className = 'payment-status-text pago';
+                }
+                if (pagamentoSlider) {
+                    pagamentoSlider.classList.add('pago');
+                }
+            } else {
+                if (pagamentoStatusText) {
+                    pagamentoStatusText.textContent = '⏳ Não pago';
+                    pagamentoStatusText.className = 'payment-status-text nao-pago';
+                }
+                if (pagamentoSlider) {
+                    pagamentoSlider.classList.remove('pago');
+                }
+            }
         } else {
             document.getElementById('servicoId').value = '';
             document.getElementById('servicoCliente').value = '';
@@ -332,6 +455,18 @@ export class ServicosManager {
             document.getElementById('servicoValor').value = '';
             document.getElementById('servicoStatus').value = 'pendente';
             document.getElementById('modalTitle').textContent = 'Novo Serviço';
+
+            // Resetar toggle de pagamento
+            if (pagoCheckbox) {
+                pagoCheckbox.checked = false;
+            }
+            if (pagamentoStatusText) {
+                pagamentoStatusText.textContent = '⏳ Não pago';
+                pagamentoStatusText.className = 'payment-status-text nao-pago';
+            }
+            if (pagamentoSlider) {
+                pagamentoSlider.classList.remove('pago');
+            }
         }
 
         modal.style.display = 'flex';
@@ -350,6 +485,7 @@ export class ServicosManager {
         const data = document.getElementById('servicoData').value;
         const valor = parseFloat(document.getElementById('servicoValor').value) || null;
         const status = document.getElementById('servicoStatus').value;
+        const pago = document.getElementById('servicoPago')?.checked || false;
 
         // Validações
         if (!clienteId) {
@@ -373,7 +509,8 @@ export class ServicosManager {
             descricao: descricao || null,
             data: data,
             valor: valor,
-            status: status
+            status: status,
+            pago: pago
         };
 
         if (id) {
