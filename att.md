@@ -5,4 +5,7 @@ Atualização pequena ao mostrar valores na dashboard referente aos ultimos serv
 Quero que o usuario seja capaz de clicar nos cards e cada um deles vai ter um destino por exemplo:
 
 Se o usuario clicar no card de clientes ele será redirecionado para a pagina de clientes.
-Se ele clicar no card de concluidos
+Se ele clicar no card de concluidos ele será redirecionado para a pagina de serviços com o filtro de status setado em concluidos, isso deve acontecer com pendentes e cancelados.
+Se clicar o total de serviços ele vai para a pagina de serviços.
+Se clicar em notas ficais ele vai para a pagina de notas.
+Se clicar em valor recebido e valor a receber.

@@ -8,6 +8,86 @@
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/economia.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Estilos extras para melhorias pontuais */
+        .economia-container {
+            padding-bottom: 20px;
+        }
+
+        .stat-card .stat-icon {
+            font-size: 32px;
+            margin-bottom: 4px;
+            display: block;
+            line-height: 1;
+        }
+
+        /* Animações de entrada */
+        .stat-card {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.10s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card:nth-child(4) { animation-delay: 0.20s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Badge de contagem com animação */
+        .badge-count {
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Responsividade adicional */
+        @media (max-width: 480px) {
+            .stat-card .stat-icon {
+                font-size: 24px;
+            }
+
+            .period-filters .btn-filter {
+                flex: 1;
+                justify-content: center;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .period-filters .btn-filter i {
+                width: 14px;
+                height: 14px;
+            }
+
+            .chart-container canvas {
+                height: 180px !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .period-filters .btn-filter {
+                font-size: 10px;
+                padding: 6px 8px;
+                min-width: 50px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 16px;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -23,25 +103,25 @@
 
         <!-- Content -->
         <div class="economia-container">
-            <!-- Stats -->
+            <!-- Stats Cards -->
             <div class="stats-grid" id="statsGrid">
-                <div class="stat-card">
-                    <div class="stat-icon">💰</div>
+                <div class="stat-card recebido-card">
+                    <span class="stat-icon">💰</span>
                     <div class="stat-value recebido" id="totalRecebido">R$ 0,00</div>
                     <div class="stat-label">Total Recebido</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">⏳</div>
+                <div class="stat-card receber-card">
+                    <span class="stat-icon">⏳</span>
                     <div class="stat-value receber" id="totalAReceber">R$ 0,00</div>
                     <div class="stat-label">Total a Receber</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📊</div>
+                <div class="stat-card total-card">
+                    <span class="stat-icon">📊</span>
                     <div class="stat-value total" id="totalGeral">R$ 0,00</div>
                     <div class="stat-label">Total Geral</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📈</div>
+                <div class="stat-card percentual-card">
+                    <span class="stat-icon">📈</span>
                     <div class="stat-value percentual" id="percentualRecebido">0%</div>
                     <div class="stat-label">Percentual Recebido</div>
                 </div>
@@ -49,16 +129,16 @@
 
             <!-- Filtros de Período -->
             <div class="period-filters">
-                <button class="btn-filter active" data-periodo="semana">
+                <button class="btn-filter active" data-periodo="semana" title="Serviços desta semana">
                     <i data-lucide="calendar"></i> Esta Semana
                 </button>
-                <button class="btn-filter" data-periodo="mes">
+                <button class="btn-filter" data-periodo="mes" title="Serviços deste mês">
                     <i data-lucide="calendar"></i> Este Mês
                 </button>
-                <button class="btn-filter" data-periodo="todos">
+                <button class="btn-filter" data-periodo="todos" title="Todos os serviços">
                     <i data-lucide="calendar"></i> Todos
                 </button>
-                <button class="btn-filter" id="refreshEconomiaBtn">
+                <button class="btn-filter" id="refreshEconomiaBtn" title="Atualizar dados">
                     <i data-lucide="refresh-cw"></i> Atualizar
                 </button>
             </div>
@@ -66,11 +146,23 @@
             <!-- Gráficos -->
             <div class="charts-grid">
                 <div class="chart-container">
-                    <h3><i data-lucide="trending-up"></i> Evolução Financeira</h3>
+                    <h3>
+                        <i data-lucide="trending-up"></i>
+                        Evolução Financeira
+                        <span style="font-size: 12px; font-weight: 400; color: var(--gray-400); margin-left: auto;">
+                            Recebido vs A Receber
+                        </span>
+                    </h3>
                     <canvas id="evolutionChart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3><i data-lucide="pie-chart"></i> Recebido vs A Receber</h3>
+                    <h3>
+                        <i data-lucide="pie-chart"></i>
+                        Recebido vs A Receber
+                        <span style="font-size: 12px; font-weight: 400; color: var(--gray-400); margin-left: auto;">
+                            Proporção
+                        </span>
+                    </h3>
                     <canvas id="comparisonChart"></canvas>
                 </div>
             </div>
@@ -83,7 +175,8 @@
                         Clientes com Pagamentos Pendentes
                         <span class="badge-count" id="debtorsCount">0</span>
                     </h3>
-                    <span style="font-size: 13px; color: var(--gray-500);">
+                    <span class="subtitle">
+                        <i data-lucide="info"></i>
                         Clique no nome para ver os serviços
                     </span>
                 </div>
@@ -99,7 +192,10 @@
                         </thead>
                         <tbody id="debtorsBody">
                             <tr class="empty-row">
-                                <td colspan="4">Carregando dados...</td>
+                                <td colspan="4">
+                                    <span style="font-size: 18px;">🔄</span><br>
+                                    Carregando dados...
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -136,7 +232,10 @@
     <div class="modal" id="clienteDetalheModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h2 id="detalheModalTitle">Serviços Pendentes</h2>
+                <h2 id="detalheModalTitle">
+                    <i data-lucide="user" style="width: 24px; height: 24px; color: var(--primary);"></i>
+                    Serviços Pendentes
+                </h2>
                 <button class="modal-close" id="closeDetalheModal">
                     <i data-lucide="x"></i>
                 </button>
@@ -146,21 +245,31 @@
                     <div class="cliente-avatar" id="detalheAvatar">E</div>
                     <div class="cliente-info">
                         <h3 id="detalheClienteNome">Cliente</h3>
-                        <p id="detalheClienteInfo">Total devido: <strong id="detalheTotalDevido">R$ 0,00</strong></p>
+                        <p id="detalheClienteInfo">
+                            <i data-lucide="credit-card" style="width: 14px; height: 14px; color: #f44336;"></i>
+                            Total devido: <strong id="detalheTotalDevido" style="color: #f44336;">R$ 0,00</strong>
+                        </p>
                     </div>
                 </div>
                 <div id="detalheServicosList" class="servicos-pendentes-list">
-                    <div style="text-align: center; color: var(--gray-400); padding: 20px;">
+                    <div style="text-align: center; color: var(--gray-400); padding: 30px;">
+                        <span style="font-size: 24px;">🔄</span><br>
                         Carregando serviços...
                     </div>
                 </div>
                 <div class="total-pendente">
-                    <span class="label">Total Pendente:</span>
+                    <span class="label">
+                        <i data-lucide="alert-circle" style="width: 18px; height: 18px;"></i>
+                        Total Pendente:
+                    </span>
                     <span class="valor" id="detalheTotalPendente">R$ 0,00</span>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="closeDetalheModalBtn">Fechar</button>
+                <button class="btn btn-secondary" id="closeDetalheModalBtn">
+                    <i data-lucide="x"></i>
+                    Fechar
+                </button>
             </div>
         </div>
     </div>

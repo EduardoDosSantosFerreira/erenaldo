@@ -20,6 +20,72 @@ export class ServicosManager {
         this.setupEventListeners();
         this.setupPaymentToggle();
         this.setupRealtimeValidation();
+        this.checkUrlForServicoId();
+    }
+
+    // ============================================
+    // VERIFICAR ID NA URL
+    // ============================================
+    checkUrlForServicoId() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const servicoId = urlParams.get('id');
+        
+        if (servicoId) {
+            console.log(`📋 ID do serviço encontrado na URL: ${servicoId}`);
+            this.openServicoById(servicoId);
+        }
+    }
+
+    async openServicoById(servicoId) {
+        try {
+            let tentativas = 0;
+            const maxTentativas = 20;
+            
+            while (this.servicos.length === 0 && tentativas < maxTentativas) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                tentativas++;
+            }
+
+            let servico = this.servicos.find(s => s.id === servicoId);
+            
+            if (!servico) {
+                console.log('🔍 Serviço não encontrado na lista, buscando no banco...');
+                const { data, error } = await supabase
+                    .from('servicos')
+                    .select(`
+                        *,
+                        clientes:cliente_id(nome)
+                    `)
+                    .eq('id', servicoId)
+                    .single();
+
+                if (error) {
+                    console.error('❌ Erro ao buscar serviço:', error);
+                    this.showNotification('Serviço não encontrado!', 'error');
+                    return;
+                }
+
+                servico = data;
+                
+                if (servico && !this.servicos.some(s => s.id === servico.id)) {
+                    this.servicos.unshift(servico);
+                    this.renderServicos();
+                    this.updateStats();
+                }
+            }
+
+            if (servico) {
+                console.log('✅ Serviço encontrado, abrindo modal...');
+                setTimeout(() => {
+                    this.openModal(servico);
+                }, 300);
+            } else {
+                this.showNotification('Serviço não encontrado!', 'error');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao abrir serviço por ID:', error);
+            this.showNotification('Erro ao carregar serviço!', 'error');
+        }
     }
 
     // ============================================
@@ -105,6 +171,8 @@ export class ServicosManager {
             console.log(`✅ ${this.servicos.length} serviços carregados`);
             this.renderServicos();
             this.updateStats();
+
+            this.checkUrlForServicoId();
 
         } catch (error) {
             console.error('❌ Erro ao carregar serviços:', error);
@@ -225,7 +293,6 @@ export class ServicosManager {
 
         if (window.lucide) lucide.createIcons();
 
-        // Event listeners para os botões
         container.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -257,7 +324,6 @@ export class ServicosManager {
             });
         });
 
-        // Event listeners para os toggles de pagamento
         container.querySelectorAll('.toggle-pagamento').forEach(toggle => {
             toggle.addEventListener('change', (e) => {
                 e.stopPropagation();
@@ -291,7 +357,6 @@ export class ServicosManager {
     }
 
     setupPaymentToggle() {
-        // Toggle do pagamento no modal
         const pagoCheckbox = document.getElementById('servicoPago');
         const pagamentoStatusText = document.getElementById('pagamentoStatusText');
         const pagamentoSlider = document.getElementById('pagamentoSlider');
@@ -323,7 +388,6 @@ export class ServicosManager {
     // VALIDAÇÃO EM TEMPO REAL
     // ============================================
     setupRealtimeValidation() {
-        // Validação do nome no modal
         const nomeInput = document.getElementById('servicoNome');
         const nomeCounter = document.getElementById('nomeCounter');
         const nomeError = document.getElementById('nomeError');
@@ -367,7 +431,6 @@ export class ServicosManager {
             });
         }
 
-        // Validação da data
         const dataInput = document.getElementById('servicoData');
         const dataError = document.getElementById('dataError');
         const dataStatus = document.getElementById('dataStatus');
@@ -401,7 +464,6 @@ export class ServicosManager {
             });
         }
 
-        // Validação do cliente
         const clienteSelect = document.getElementById('servicoCliente');
         const clienteError = document.getElementById('clienteError');
         const clienteStatus = document.getElementById('clienteStatus');
@@ -435,7 +497,6 @@ export class ServicosManager {
             });
         }
 
-        // Máscara de valor
         const valorInput = document.getElementById('servicoValor');
         const valorHint = document.getElementById('valorHint');
 
@@ -473,7 +534,6 @@ export class ServicosManager {
             });
         }
 
-        // Contador de caracteres da descrição
         const descricaoInput = document.getElementById('servicoDescricao');
         const descricaoCounter = document.getElementById('descricaoCounter');
 
@@ -512,7 +572,7 @@ export class ServicosManager {
     }
 
     // ============================================
-    // ATUALIZAÇÃO DE ESTATÍSTICAS (LÓGICA CORRIGIDA)
+    // ATUALIZAÇÃO DE ESTATÍSTICAS
     // ============================================
     updateStats() {
         const total = this.servicos.length;
@@ -520,20 +580,13 @@ export class ServicosManager {
         const pendentes = this.servicos.filter(s => s.status === 'pendente').length;
         const valorTotal = this.servicos.reduce((sum, s) => sum + (s.valor || 0), 0);
         
-        // ============================================
-        // LÓGICA FINANCEIRA CORRIGIDA
-        // Apenas serviços CONCLUÍDOS entram no fluxo financeiro
-        // ============================================
-        // Valor Recebido = serviços concluídos E pagos
         const valorRecebido = this.servicos
             .filter(s => s.status === 'concluido' && s.pago === true)
-            .reduce((sum, s) => sum + (s.valor || 0), 0);
+            .reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
         
-        // Valor a Receber = serviços concluídos E NÃO pagos
-        // (Serviços pendentes NÃO entram no valor a receber)
         const valorAReceber = this.servicos
             .filter(s => s.status === 'concluido' && s.pago !== true)
-            .reduce((sum, s) => sum + (s.valor || 0), 0);
+            .reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
 
         document.getElementById('totalServicos').textContent = total;
         document.getElementById('servicosConcluidos').textContent = concluidos;
@@ -587,7 +640,6 @@ export class ServicosManager {
         try {
             console.log('🗑️ Excluindo serviço:', id);
             
-            // Verificar se o serviço tem notas associadas
             const { data: notas, error: notasError } = await supabase
                 .from('notas')
                 .select('id')
@@ -623,7 +675,6 @@ export class ServicosManager {
         try {
             console.log('✅ Concluindo serviço:', id);
             
-            // Buscar o serviço atual para verificar se já tem status
             const { data: servico, error: findError } = await supabase
                 .from('servicos')
                 .select('*')
@@ -632,7 +683,6 @@ export class ServicosManager {
 
             if (findError) throw findError;
 
-            // Se já estiver concluído, não fazer nada
             if (servico.status === 'concluido') {
                 this.showNotification('Este serviço já está concluído!', 'warning');
                 return;
@@ -642,7 +692,7 @@ export class ServicosManager {
                 .from('servicos')
                 .update({ 
                     status: 'concluido',
-                    pago: false // Ao concluir, o pagamento começa como não pago
+                    pago: false
                 })
                 .eq('id', id);
 
@@ -665,12 +715,10 @@ export class ServicosManager {
 
         this.populateClienteSelects();
 
-        // Resetar estado do toggle de pagamento
         const pagoCheckbox = document.getElementById('servicoPago');
         const pagamentoStatusText = document.getElementById('pagamentoStatusText');
         const pagamentoSlider = document.getElementById('pagamentoSlider');
 
-        // Resetar validações
         document.querySelectorAll('.form-error').forEach(e => e.style.display = 'none');
         document.querySelectorAll('#servicoForm input, #servicoForm select, #servicoForm textarea').forEach(el => {
             el.className = '';
@@ -696,7 +744,6 @@ export class ServicosManager {
             document.getElementById('servicoStatus').value = data.status;
             document.getElementById('modalTitle').textContent = 'Editar Serviço';
 
-            // Configurar toggle de pagamento
             const isPago = data.pago === true;
             if (pagoCheckbox) {
                 pagoCheckbox.checked = isPago;
@@ -719,11 +766,9 @@ export class ServicosManager {
                 }
             }
 
-            // Atualizar contadores
             document.getElementById('nomeCounter').textContent = `${(data.servico || '').length}/100`;
             document.getElementById('descricaoCounter').textContent = `${(data.descricao || '').length}/500`;
 
-            // Atualizar hints de validação
             if (data.cliente_id) {
                 document.getElementById('clienteHint').textContent = 'Cliente selecionado ✓';
                 document.getElementById('clienteHint').className = 'input-hint success-hint';
@@ -760,7 +805,6 @@ export class ServicosManager {
             document.getElementById('servicoStatus').value = 'pendente';
             document.getElementById('modalTitle').textContent = 'Novo Serviço';
 
-            // Resetar toggle de pagamento
             if (pagoCheckbox) {
                 pagoCheckbox.checked = false;
             }
@@ -772,7 +816,6 @@ export class ServicosManager {
                 pagamentoSlider.classList.remove('pago');
             }
 
-            // Resetar contadores
             document.getElementById('nomeCounter').textContent = '0/100';
             document.getElementById('descricaoCounter').textContent = '0/500';
         }
@@ -800,7 +843,6 @@ export class ServicosManager {
         const status = document.getElementById('servicoStatus').value;
         const pago = document.getElementById('servicoPago')?.checked || false;
 
-        // Validações
         if (!clienteId) {
             this.showNotification('Selecione um cliente!', 'error');
             document.getElementById('servicoCliente').focus();
@@ -878,6 +920,5 @@ export class ServicosManager {
 
     showNotification(message, type = 'info') {
         console.log(`📢 ${type}: ${message}`);
-        // Será sobrescrito pelo HTML
     }
 }

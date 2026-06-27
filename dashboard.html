@@ -6,8 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ERENALDO - Dashboard</title>
     <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
     <style>
-        /* Estilos adicionais para o dashboard */
+        /* ============================================
+           DASHBOARD - ESTILOS EMBUTIDOS
+           ============================================ */
+
+        /* Loading */
         .loading-container {
             display: flex;
             justify-content: center;
@@ -27,9 +32,7 @@
         }
 
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
 
         .loading-text {
@@ -37,11 +40,265 @@
             font-size: 14px;
         }
 
-        /* Estilos para os cards de serviço */
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 12px 8px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid var(--gray-100);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gray-200);
+        }
+
+        .stat-card .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .stat-card .stat-value.primary { color: var(--primary); }
+        .stat-card .stat-value.success { color: #4CAF50; }
+        .stat-card .stat-value.warning { color: #F57C00; }
+        .stat-card .stat-value.danger { color: #f44336; }
+
+        .stat-card .stat-label {
+            font-size: 8px;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .dashboard-grid .calendar-section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-100);
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .dashboard-grid .calendar-section:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gray-200);
+        }
+
+        /* Calendar Header */
+        .dashboard-grid .calendar-section .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .dashboard-grid .calendar-section .calendar-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .dashboard-grid .calendar-section .calendar-header h3 i {
+            color: var(--primary);
+            width: 18px;
+            height: 18px;
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .nav-buttons {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .nav-buttons button {
+            padding: 4px 10px;
+            border: 1px solid var(--gray-200);
+            background: var(--white);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--gray-600);
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .nav-buttons button:hover {
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .nav-buttons .today-btn {
+            padding: 4px 12px;
+            font-weight: 600;
+            color: var(--primary);
+            border-color: var(--primary);
+            font-size: 12px;
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .nav-buttons .today-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .current-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--secondary);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .view-buttons {
+            display: flex;
+            gap: 3px;
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .view-buttons button {
+            padding: 4px 10px;
+            border: 1px solid var(--gray-200);
+            background: var(--white);
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--gray-600);
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .view-buttons button:hover {
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+
+        .dashboard-grid .calendar-section .calendar-header .view-buttons button.active {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        /* Day Details */
+        .day-details-section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-100);
+            max-height: 350px;
+            overflow-y: auto;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .day-details-section:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gray-200);
+        }
+
+        .day-details-section::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .day-details-section::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 2px;
+        }
+
+        .day-details-section::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 2px;
+        }
+
+        .day-details-section .day-details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--gray-100);
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .day-details-section .day-details-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .day-details-section .day-details-header h3 i {
+            color: var(--primary);
+            width: 18px;
+            height: 18px;
+        }
+
+        .day-details-section .day-details-header .day-date {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .day-details-section .day-details-header .day-date strong {
+            color: var(--secondary);
+        }
+
+        .day-details-section .empty-day {
+            text-align: center;
+            padding: 30px 15px;
+            color: var(--gray-400);
+        }
+
+        .day-details-section .empty-day .empty-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .day-details-section .empty-day h4 {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 4px;
+        }
+
+        .day-details-section .empty-day p {
+            font-size: 12px;
+        }
+
+        /* Servico Item */
         .servico-item {
             background: var(--white);
             border-radius: var(--radius-sm);
-            padding: 12px 16px;
+            padding: 10px 14px;
             margin-bottom: 8px;
             border-left: 3px solid var(--primary);
             display: flex;
@@ -50,6 +307,7 @@
             flex-wrap: wrap;
             gap: 8px;
             transition: var(--transition);
+            cursor: pointer;
         }
 
         .servico-item:hover {
@@ -66,31 +324,31 @@
         .servico-item .servico-info .servico-nome {
             font-weight: 500;
             color: var(--secondary);
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .servico-item .servico-info .servico-cliente {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--gray-500);
         }
 
         .servico-item .servico-meta {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
         .servico-item .servico-meta .servico-valor {
             font-weight: 600;
             color: var(--primary);
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .servico-item .servico-meta .servico-status {
-            padding: 2px 10px;
+            padding: 2px 8px;
             border-radius: 20px;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -112,15 +370,34 @@
         }
 
         .servico-item .servico-meta .servico-data {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--gray-400);
         }
 
-        /* Estilos para notas */
+        .servico-item .servico-meta .payment-badge {
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .servico-item .servico-meta .payment-badge.pago {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .servico-item .servico-meta .payment-badge.nao-pago {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        /* Nota Item */
         .nota-item {
             background: var(--white);
             border-radius: var(--radius-sm);
-            padding: 12px 16px;
+            padding: 10px 14px;
             margin-bottom: 8px;
             border-left: 3px solid #4CAF50;
             display: flex;
@@ -145,62 +422,282 @@
         .nota-item .nota-info .nota-servico {
             font-weight: 500;
             color: var(--secondary);
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .nota-item .nota-info .nota-cliente {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--gray-500);
         }
 
         .nota-item .nota-meta {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
         .nota-item .nota-meta .nota-valor {
             font-weight: 600;
             color: #4CAF50;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .nota-item .nota-meta .nota-numero {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--gray-400);
         }
 
         .nota-item .nota-meta .nota-data {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--gray-400);
         }
 
         .nota-item .nota-meta .nota-arquivo {
             color: var(--primary);
-            font-size: 16px;
+            font-size: 15px;
             text-decoration: none;
         }
 
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray-400);
+        }
+
+        /* Modal */
+        .modal .badge-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .modal .badge-status.pendente {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .modal .badge-status.concluido {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .modal .badge-status.cancelado {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        /* Day Event Item */
+        .day-event-item {
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-left: 3px solid var(--primary);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .day-event-item:hover {
+            background: var(--gray-100);
+            transform: translateX(4px);
+        }
+
+        .day-event-item .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+
+        .day-event-item .event-header .event-title {
+            font-weight: 500;
+            color: var(--secondary);
+            font-size: 13px;
+        }
+
+        .day-event-item .event-header .event-status {
+            padding: 1px 8px;
+            border-radius: 20px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+        }
+
+        .day-event-item .event-header .event-status.pendente {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .day-event-item .event-header .event-status.concluido {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .day-event-item .event-header .event-status.cancelado {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .day-event-item .event-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--gray-500);
+        }
+
+        .day-event-item .event-body .event-info {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .day-event-item .event-body .event-info i {
+            width: 12px;
+            height: 12px;
+        }
+
+        .day-event-item .event-body .event-valor {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 12px;
+        }
+
         /* Responsividade */
-        @media (max-width: 480px) {
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            .stat-card .stat-value {
+                font-size: 17px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            .stat-card {
+                padding: 10px 6px;
+            }
+            .stat-card .stat-value {
+                font-size: 15px;
+            }
+            .stat-card .stat-label {
+                font-size: 7px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            .stat-card {
+                padding: 8px 6px;
+            }
+            .stat-card .stat-value {
+                font-size: 14px;
+            }
+            .stat-card .stat-label {
+                font-size: 7px;
+            }
+            
+            .dashboard-grid .calendar-section .calendar-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+            .dashboard-grid .calendar-section .calendar-header h3 {
+                font-size: 14px;
+                justify-content: center;
+            }
+            .dashboard-grid .calendar-section .calendar-header .current-date {
+                min-width: auto;
+                font-size: 13px;
+                text-align: center;
+            }
+            .dashboard-grid .calendar-section .calendar-header .nav-buttons {
+                justify-content: center;
+            }
+            .dashboard-grid .calendar-section .calendar-header .view-buttons {
+                justify-content: center;
+            }
+            .day-details-section .day-details-header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
             .servico-item {
                 flex-direction: column;
                 align-items: stretch;
             }
-
             .servico-item .servico-meta {
                 justify-content: space-between;
             }
-
             .nota-item {
                 flex-direction: column;
                 align-items: stretch;
             }
-
             .nota-item .nota-meta {
                 justify-content: space-between;
             }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 4px;
+            }
+            .stat-card {
+                padding: 6px 4px;
+            }
+            .stat-card .stat-value {
+                font-size: 12px;
+            }
+            .stat-card .stat-label {
+                font-size: 6px;
+                letter-spacing: 0.1px;
+            }
+            .day-details-section {
+                max-height: 280px;
+            }
+            .day-event-item .event-header .event-title {
+                font-size: 12px;
+            }
+            .day-event-item .event-body {
+                font-size: 10px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
         }
     </style>
 </head>
@@ -228,65 +725,93 @@
             <div id="dashboardData" style="display: none;">
                 <!-- Stats Grid - 8 cards -->
                 <div class="stats-grid" id="dashboardStats">
-                    <!-- Clientes -->
                     <div class="stat-card">
                         <div class="stat-value primary" id="totalClientes">0</div>
                         <div class="stat-label">Clientes</div>
                     </div>
-
-                    <!-- Serviços Concluídos -->
                     <div class="stat-card">
                         <div class="stat-value success" id="servicosConcluidos">0</div>
                         <div class="stat-label">Concluídos</div>
                     </div>
-
-                    <!-- Serviços Pendentes -->
                     <div class="stat-card">
                         <div class="stat-value warning" id="servicosPendentes">0</div>
                         <div class="stat-label">Pendentes</div>
                     </div>
-
-                    <!-- Serviços Cancelados -->
                     <div class="stat-card">
                         <div class="stat-value danger" id="servicosCancelados">0</div>
                         <div class="stat-label">Cancelados</div>
                     </div>
-
-                    <!-- Total de Serviços -->
                     <div class="stat-card">
                         <div class="stat-value" id="totalServicos">0</div>
                         <div class="stat-label">Total Serviços</div>
                     </div>
-
-                    <!-- Notas Fiscais -->
                     <div class="stat-card">
                         <div class="stat-value success" id="totalNotas">0</div>
                         <div class="stat-label">Notas Fiscais</div>
                     </div>
-
-                    <!-- Valor Recebido -->
                     <div class="stat-card">
                         <div class="stat-value success" id="valorRecebido">R$ 0,00</div>
                         <div class="stat-label">Valor Recebido</div>
                     </div>
-
-                    <!-- Valor a Receber -->
                     <div class="stat-card">
                         <div class="stat-value warning" id="valorAReceber">R$ 0,00</div>
                         <div class="stat-label">Valor a Receber</div>
                     </div>
                 </div>
 
+                <!-- Dashboard Grid com Calendário -->
+                <div class="dashboard-grid">
+                    <!-- Calendário -->
+                    <div class="calendar-section">
+                        <div class="calendar-header">
+                            <h3>
+                                <i data-lucide="calendar"></i>
+                                Agenda de Serviços
+                            </h3>
+                            <div class="nav-buttons">
+                                <button id="prevBtn" title="Anterior">‹</button>
+                                <span class="current-date" id="calendarTitle">Carregando...</span>
+                                <button id="nextBtn" title="Próximo">›</button>
+                                <button class="today-btn" id="todayBtn">Hoje</button>
+                            </div>
+                            <div class="view-buttons">
+                                <button class="active" data-view="dayGridMonth">Mês</button>
+                                <button data-view="timeGridWeek">Semana</button>
+                                <button data-view="timeGridDay">Dia</button>
+                            </div>
+                        </div>
+                        <div id="calendar"></div>
+                    </div>
+
+                    <!-- Detalhes do Dia -->
+                    <div class="day-details-section" id="dayDetails">
+                        <div class="day-details-header">
+                            <h3>
+                                <i data-lucide="list"></i>
+                                Atividades do Dia
+                            </h3>
+                            <span class="day-date" id="selectedDate">
+                                <strong>Selecione um dia</strong>
+                            </span>
+                        </div>
+                        <div id="dayDetailsContent">
+                            <div class="empty-day">
+                                <span class="empty-icon">📅</span>
+                                <h4>Nenhum dia selecionado</h4>
+                                <p>Clique em uma data no calendário para ver os detalhes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Últimos Serviços -->
                 <div style="margin-top: 16px;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="font-size: 16px; color: var(--gray-700);">📋 Últimos Serviços</h3>
-                        <a href="servicos.html"
-                            style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver todos →</a>
+                        <a href="servicos.html" style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver todos →</a>
                     </div>
                     <div id="ultimosServicos">
-                        <div class="empty-state" style="padding: 20px;">
+                        <div class="empty-state">
                             <p>Nenhum serviço registrado</p>
                         </div>
                     </div>
@@ -294,14 +819,12 @@
 
                 <!-- Últimas Notas -->
                 <div style="margin-top: 16px;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="font-size: 16px; color: var(--gray-700);">📄 Últimas Notas</h3>
-                        <a href="notas.html" style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver
-                            todas →</a>
+                        <a href="notas.html" style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver todas →</a>
                     </div>
                     <div id="ultimasNotas">
-                        <div class="empty-state" style="padding: 20px;">
+                        <div class="empty-state">
                             <p>Nenhuma nota fiscal registrada</p>
                         </div>
                     </div>
@@ -334,12 +857,40 @@
         </nav>
     </div>
 
+    <!-- Modal de Detalhes do Evento -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="eventModalTitle">Detalhes do Serviço</h2>
+                <button class="modal-close" id="closeEventModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="eventModalContent">
+                <div style="text-align: center; padding: 20px; color: var(--gray-400);">
+                    Carregando detalhes...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeEventModalBtn">Fechar</button>
+                <a href="#" id="eventModalLink" class="btn btn-primary" style="text-decoration: none; display: none;">
+                    <i data-lucide="external-link"></i>
+                    Ver no Sistema
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts - FullCalendar carregado UMA ÚNICA VEZ -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- FullCalendar core + plugins em UM ÚNICO arquivo para evitar duplicatas -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    
     <script type="module">
         import { AuthService } from './modules/auth.js';
         import { Dashboard } from './modules/dashboard.js';
 
-        console.log('🚀 Inicializando Dashboard...');
+        console.log('🚀 Inicializando Dashboard com Calendário...');
 
         try {
             const user = await AuthService.checkAuth();

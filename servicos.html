@@ -1448,6 +1448,21 @@
 
         console.log('✅ Serviços inicializado!');
     </script>
+    <script>
+        // No servicos.html, adicione isso no início do script
+const urlParams = new URLSearchParams(window.location.search);
+const servicoId = urlParams.get('id');
+
+if (servicoId) {
+    // Aguardar o carregamento da lista e abrir o modal de edição
+    setTimeout(() => {
+        const servico = servicosManager.servicos.find(s => s.id === servicoId);
+        if (servico) {
+            servicosManager.openModal(servico);
+        }
+    }, 500);
+}
+    </script>
 </body>
 
 </html>
