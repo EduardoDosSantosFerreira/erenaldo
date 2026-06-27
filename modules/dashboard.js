@@ -13,6 +13,7 @@ export class Dashboard {
         await this.loadData();
         await this.initCalendar();
         this.setupEventListeners();
+        this.setupCardNavigation();
     }
 
     // ============================================
@@ -127,6 +128,83 @@ export class Dashboard {
     }
 
     // ============================================
+    // NAVEGAÇÃO DOS CARDS
+    // ============================================
+    setupCardNavigation() {
+        // Card "Clientes" → clientes.html
+        const clientesCard = document.getElementById('totalClientes')?.closest('.stat-card');
+        if (clientesCard) {
+            clientesCard.style.cursor = 'pointer';
+            clientesCard.addEventListener('click', () => {
+                window.location.href = 'clientes.html';
+            });
+        }
+
+        // Card "Total Serviços" → servicos.html
+        const totalServicosCard = document.getElementById('totalServicos')?.closest('.stat-card');
+        if (totalServicosCard) {
+            totalServicosCard.style.cursor = 'pointer';
+            totalServicosCard.addEventListener('click', () => {
+                window.location.href = 'servicos.html';
+            });
+        }
+
+        // Card "Concluídos" → servicos.html?status=concluido
+        const concluidosCard = document.getElementById('servicosConcluidos')?.closest('.stat-card');
+        if (concluidosCard) {
+            concluidosCard.style.cursor = 'pointer';
+            concluidosCard.addEventListener('click', () => {
+                window.location.href = 'servicos.html?status=concluido';
+            });
+        }
+
+        // Card "Pendentes" → servicos.html?status=pendente
+        const pendentesCard = document.getElementById('servicosPendentes')?.closest('.stat-card');
+        if (pendentesCard) {
+            pendentesCard.style.cursor = 'pointer';
+            pendentesCard.addEventListener('click', () => {
+                window.location.href = 'servicos.html?status=pendente';
+            });
+        }
+
+        // Card "Cancelados" → servicos.html?status=cancelado
+        const canceladosCard = document.getElementById('servicosCancelados')?.closest('.stat-card');
+        if (canceladosCard) {
+            canceladosCard.style.cursor = 'pointer';
+            canceladosCard.addEventListener('click', () => {
+                window.location.href = 'servicos.html?status=cancelado';
+            });
+        }
+
+        // Card "Notas Fiscais" → notas.html
+        const notasCard = document.getElementById('totalNotas')?.closest('.stat-card');
+        if (notasCard) {
+            notasCard.style.cursor = 'pointer';
+            notasCard.addEventListener('click', () => {
+                window.location.href = 'notas.html';
+            });
+        }
+
+        // Card "Valor Recebido" → economia.html?filtro=recebido
+        const valorRecebidoCard = document.getElementById('valorRecebido')?.closest('.stat-card');
+        if (valorRecebidoCard) {
+            valorRecebidoCard.style.cursor = 'pointer';
+            valorRecebidoCard.addEventListener('click', () => {
+                window.location.href = 'economia.html?filtro=recebido';
+            });
+        }
+
+        // Card "Valor a Receber" → economia.html?filtro=receber
+        const valorAReceberCard = document.getElementById('valorAReceber')?.closest('.stat-card');
+        if (valorAReceberCard) {
+            valorAReceberCard.style.cursor = 'pointer';
+            valorAReceberCard.addEventListener('click', () => {
+                window.location.href = 'economia.html?filtro=receber';
+            });
+        }
+    }
+
+    // ============================================
     // RENDERIZAÇÃO DE LISTAS
     // ============================================
     renderUltimosServicos(servicos) {
@@ -150,8 +228,31 @@ export class Dashboard {
 
         container.innerHTML = servicos.map(s => {
             const isPago = s.pago === true;
-            const pagoLabel = isPago ? '💰 Pago' : '⏳ A Pagar';
-            
+
+            // ============================================
+            // COR DO VALOR BASEADA NO STATUS DE PAGAMENTO
+            // ============================================
+            // Verde: pagamento realizado (pago)
+            // Laranja: pagamento pendente (não pago)
+            // Sem cor: sem valor definido ou serviço não concluído
+            let valorColor = '';
+            let valorClass = '';
+
+            if (s.valor) {
+                if (s.status === 'concluido') {
+                    if (isPago) {
+                        valorColor = '#4CAF50'; // Verde
+                        valorClass = 'valor-pago';
+                    } else {
+                        valorColor = '#F57C00'; // Laranja
+                        valorClass = 'valor-pendente';
+                    }
+                } else {
+                    valorColor = 'var(--gray-500)'; // Cinza para pendentes/cancelados
+                    valorClass = 'valor-normal';
+                }
+            }
+
             return `
             <div class="servico-item" onclick="window.dashboard?.goToServico('${s.id}')">
                 <div class="servico-info">
@@ -159,11 +260,16 @@ export class Dashboard {
                     <span class="servico-cliente">👤 ${s.clientes?.nome || 'Cliente não informado'}</span>
                 </div>
                 <div class="servico-meta">
-                    ${s.valor ? `<span class="servico-valor">R$ ${s.valor.toFixed(2)}</span>` : ''}
+                    ${s.valor ? `
+                        <span class="servico-valor ${valorClass}" style="color: ${valorColor};">
+                            R$ ${s.valor.toFixed(2)}
+                            ${s.status === 'concluido' ? (isPago ? ' ✅' : ' ⏳') : ''}
+                        </span>
+                    ` : ''}
                     <span class="servico-status ${s.status}">${statusLabels[s.status] || s.status}</span>
-                    ${s.status === 'concluido' ? 
-                        `<span class="payment-badge ${isPago ? 'pago' : 'nao-pago'}">${pagoLabel}</span>` : 
-                        ''}
+                    ${s.status === 'concluido' ?
+                    `<span class="payment-badge ${isPago ? 'pago' : 'nao-pago'}">${isPago ? '💰 Pago' : '⏳ A Pagar'}</span>` :
+                    ''}
                     <span class="servico-data">📅 ${s.data}</span>
                 </div>
             </div>
@@ -204,7 +310,7 @@ export class Dashboard {
     // ============================================
     getEvents() {
         console.log('📊 Gerando eventos para o calendário...');
-        
+
         return this.servicos.map(s => {
             const statusColors = {
                 'pendente': '#F57C00',
@@ -285,7 +391,7 @@ export class Dashboard {
 
     updateCalendarTitle() {
         if (!this.calendar) return;
-        
+
         const view = this.calendar.view;
         const titleEl = document.getElementById('calendarTitle');
         if (!titleEl) return;
@@ -314,13 +420,13 @@ export class Dashboard {
     }
 
     // ============================================
-    // HANDLE EVENT CLICK - CORRIGIDO
+    // HANDLE EVENT CLICK
     // ============================================
     handleEventClick(info) {
         console.log('🖱️ Evento clicado:', info.event);
-        
+
         let eventId = info.event.id;
-        
+
         if (!eventId || eventId === 'undefined' || eventId === 'null' || eventId === '') {
             const props = info.event.extendedProps;
             if (props && props.id) {
@@ -333,13 +439,13 @@ export class Dashboard {
         }
 
         eventId = String(eventId);
-        
+
         if (!eventId || eventId === 'undefined' || eventId === 'null' || eventId === '') {
             console.error('❌ ID do evento inválido:', eventId);
             this.showNotification('Erro ao carregar serviço!', 'error');
             return;
         }
-        
+
         console.log('📋 Redirecionando para serviço ID:', eventId);
         this.goToServico(eventId);
     }
@@ -352,7 +458,7 @@ export class Dashboard {
             this.showNotification('ID do serviço inválido!', 'error');
             return;
         }
-        
+
         console.log('🔗 Redirecionando para:', `servicos.html?id=${servicoId}`);
         window.location.href = `servicos.html?id=${servicoId}`;
     }
@@ -382,7 +488,7 @@ export class Dashboard {
     selectDate(date) {
         this.selectedDate = date;
         const dateStr = date.toISOString().split('T')[0];
-        
+
         const selectedDateEl = document.getElementById('selectedDate');
         if (selectedDateEl) {
             selectedDateEl.innerHTML = `<strong>${date.toLocaleDateString('pt-BR', {
@@ -407,9 +513,9 @@ export class Dashboard {
                     <div class="empty-icon">📭</div>
                     <h4>Nenhum serviço neste dia</h4>
                     <p>Não há atividades registradas para ${date.toLocaleDateString('pt-BR', {
-                        day: 'numeric',
-                        month: 'long'
-                    })}</p>
+                day: 'numeric',
+                month: 'long'
+            })}</p>
                 </div>
             `;
             return;
@@ -433,9 +539,10 @@ export class Dashboard {
                         ${s.clientes?.nome || 'Cliente não informado'}
                     </span>
                     ${s.valor ? `
-                        <span class="event-info event-valor">
+                        <span class="event-info event-valor" style="color: ${s.status === 'concluido' ? (s.pago ? '#4CAF50' : '#F57C00') : 'var(--gray-500)'}; font-weight: 600;">
                             <i data-lucide="dollar-sign"></i>
                             R$ ${s.valor.toFixed(2)}
+                            ${s.status === 'concluido' ? (s.pago ? ' ✅' : ' ⏳') : ''}
                         </span>
                     ` : ''}
                     ${s.pago !== undefined && s.status === 'concluido' ? `
