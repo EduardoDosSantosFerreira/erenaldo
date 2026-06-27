@@ -78,7 +78,7 @@
             background: white;
             transition: var(--transition);
             border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
         .switch input:checked+.slider {
@@ -410,6 +410,10 @@
             <a href="notas.html">
                 <i data-lucide="file-text"></i>
                 <span>Notas</span>
+            </a>
+            <a href="economia.html">
+                <i data-lucide="dollar-sign"></i>
+                <span>Economia</span>
             </a>
         </nav>
     </div>
@@ -787,8 +791,7 @@
                 container.innerHTML = this.servicos.map(s => {
                     const isPago = s.pago === true;
                     const pagoStatus = isPago ? 'pago' : 'nao-pago';
-                    const pagoLabel = isPago ? '✅ Pago' : '⏳ Aguardando pagamento';
-                    
+
                     return `
                     <div class="servico-card" data-id="${s.id}">
                         <div class="card-header">
@@ -880,7 +883,7 @@
             async togglePagamento(id, pago) {
                 try {
                     console.log(`💰 Alterando pagamento do serviço ${id} para ${pago ? 'PAGO' : 'NÃO PAGO'}`);
-                    
+
                     const { error } = await supabase
                         .from('servicos')
                         .update({ pago: pago })
@@ -901,15 +904,20 @@
                 const concluidos = this.servicos.filter(s => s.status === 'concluido').length;
                 const pendentes = this.servicos.filter(s => s.status === 'pendente').length;
                 const valorTotal = this.servicos.reduce((sum, s) => sum + (s.valor || 0), 0);
-                
+
+                // ============================================
+                // LÓGICA FINANCEIRA CORRIGIDA
+                // Apenas serviços CONCLUÍDOS entram no fluxo financeiro
+                // ============================================
                 // Valor Recebido = serviços concluídos E pagos
                 const valorRecebido = this.servicos
                     .filter(s => s.status === 'concluido' && s.pago === true)
                     .reduce((sum, s) => sum + (s.valor || 0), 0);
-                
-                // Valor a Receber = serviços concluídos E NÃO pagos + serviços pendentes
+
+                // Valor a Receber = serviços concluídos E NÃO pagos
+                // (Serviços pendentes NÃO entram no valor a receber)
                 const valorAReceber = this.servicos
-                    .filter(s => (s.status === 'concluido' && s.pago !== true) || s.status === 'pendente')
+                    .filter(s => s.status === 'concluido' && s.pago !== true)
                     .reduce((sum, s) => sum + (s.valor || 0), 0);
 
                 document.getElementById('totalServicos').textContent = total;
@@ -1200,7 +1208,7 @@
                     console.log('✅ Concluindo serviço:', id);
                     const { error } = await supabase
                         .from('servicos')
-                        .update({ status: 'concluido' })
+                        .update({ status: 'concluido', pago: false })
                         .eq('id', id);
 
                     if (error) throw error;
@@ -1216,6 +1224,21 @@
             async deleteServico(id) {
                 try {
                     console.log('🗑️ Excluindo serviço:', id);
+                    
+                    // Verificar se o serviço tem notas associadas
+                    const { data: notas, error: notasError } = await supabase
+                        .from('notas')
+                        .select('id')
+                        .eq('servico_id', id)
+                        .limit(1);
+
+                    if (notasError) throw notasError;
+
+                    if (notas && notas.length > 0) {
+                        window.showToast('Este serviço possui notas associadas. Exclua as notas primeiro.', 'warning');
+                        return;
+                    }
+
                     const { error } = await supabase
                         .from('servicos')
                         .delete()

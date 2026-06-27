@@ -838,3 +838,107 @@ input[type="tel"] {
 #toast i {
     flex-shrink: 0;
 }
+/* ============================================
+   DASHBOARD - PAYMENT BADGE
+   ============================================ */
+.servico-item .servico-meta .payment-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.servico-item .servico-meta .payment-badge.pago {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.servico-item .servico-meta .payment-badge.nao-pago {
+    background: #FFF3E0;
+    color: #E65100;
+}
+
+/* ============================================
+   DASHBOARD - STATS CARDS (8 cards)
+   ============================================ */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: var(--transition);
+    border: 1px solid var(--gray-100);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--gray-200);
+}
+
+.stat-card .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.stat-card .stat-value.primary {
+    color: var(--primary);
+}
+
+.stat-card .stat-value.success {
+    color: #4CAF50;
+}
+
+.stat-card .stat-value.warning {
+    color: #F57C00;
+}
+
+.stat-card .stat-value.danger {
+    color: #f44336;
+}
+
+.stat-card .stat-label {
+    font-size: 12px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 14px 12px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 18px;
+    }
+}

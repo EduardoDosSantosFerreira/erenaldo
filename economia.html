@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ERENALDO - Economia</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/economia.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <a href="dashboard.html" class="logo">ERENAL<span>DO</span></a>
+            <div class="user-info">
+                <span class="user-name" id="userName">Carregando...</span>
+                <div class="user-avatar" id="userAvatar">A</div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="economia-container">
+            <!-- Stats -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value recebido" id="totalRecebido">R$ 0,00</div>
+                    <div class="stat-label">Total Recebido</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-value receber" id="totalAReceber">R$ 0,00</div>
+                    <div class="stat-label">Total a Receber</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value total" id="totalGeral">R$ 0,00</div>
+                    <div class="stat-label">Total Geral</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value percentual" id="percentualRecebido">0%</div>
+                    <div class="stat-label">Percentual Recebido</div>
+                </div>
+            </div>
+
+            <!-- Filtros de Período -->
+            <div class="period-filters">
+                <button class="btn-filter active" data-periodo="semana">
+                    <i data-lucide="calendar"></i> Esta Semana
+                </button>
+                <button class="btn-filter" data-periodo="mes">
+                    <i data-lucide="calendar"></i> Este Mês
+                </button>
+                <button class="btn-filter" data-periodo="todos">
+                    <i data-lucide="calendar"></i> Todos
+                </button>
+                <button class="btn-filter" id="refreshEconomiaBtn">
+                    <i data-lucide="refresh-cw"></i> Atualizar
+                </button>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3><i data-lucide="trending-up"></i> Evolução Financeira</h3>
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3><i data-lucide="pie-chart"></i> Recebido vs A Receber</h3>
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Clientes com Pendências -->
+            <div class="debtors-section">
+                <div class="section-header">
+                    <h3>
+                        <i data-lucide="users"></i>
+                        Clientes com Pagamentos Pendentes
+                        <span class="badge-count" id="debtorsCount">0</span>
+                    </h3>
+                    <span style="font-size: 13px; color: var(--gray-500);">
+                        Clique no nome para ver os serviços
+                    </span>
+                </div>
+                <div id="debtorsTableContainer">
+                    <table class="debtors-table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Valor Devido</th>
+                                <th>Serviços Pendentes</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="debtorsBody">
+                            <tr class="empty-row">
+                                <td colspan="4">Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="dashboard.html">
+                <i data-lucide="home"></i>
+                <span>Início</span>
+            </a>
+            <a href="clientes.html">
+                <i data-lucide="users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="servicos.html">
+                <i data-lucide="briefcase"></i>
+                <span>Serviços</span>
+            </a>
+            <a href="notas.html">
+                <i data-lucide="file-text"></i>
+                <span>Notas</span>
+            </a>
+            <a href="economia.html" class="active">
+                <i data-lucide="dollar-sign"></i>
+                <span>Economia</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal Detalhes do Cliente -->
+    <div class="modal" id="clienteDetalheModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="detalheModalTitle">Serviços Pendentes</h2>
+                <button class="modal-close" id="closeDetalheModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="detalheContent">
+                <div class="cliente-detalhe-header">
+                    <div class="cliente-avatar" id="detalheAvatar">E</div>
+                    <div class="cliente-info">
+                        <h3 id="detalheClienteNome">Cliente</h3>
+                        <p id="detalheClienteInfo">Total devido: <strong id="detalheTotalDevido">R$ 0,00</strong></p>
+                    </div>
+                </div>
+                <div id="detalheServicosList" class="servicos-pendentes-list">
+                    <div style="text-align: center; color: var(--gray-400); padding: 20px;">
+                        Carregando serviços...
+                    </div>
+                </div>
+                <div class="total-pendente">
+                    <span class="label">Total Pendente:</span>
+                    <span class="valor" id="detalheTotalPendente">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeDetalheModalBtn">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast">
+        <i data-lucide="check-circle"></i>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module">
+        import { AuthService } from './modules/auth.js';
+        import { EconomiaManager } from './modules/economia.js';
+
+        // ============================================
+        // TOAST
+        // ============================================
+        window.showToast = function(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            if (!toast || !toastMessage) {
+                console.log(`[${type}] ${message}`);
+                return;
+            }
+
+            const icon = toast.querySelector('i');
+            toast.className = '';
+
+            const icons = {
+                success: 'check-circle',
+                error: 'x-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+
+            if (icon) {
+                icon.setAttribute('data-lucide', icons[type] || 'info');
+            }
+
+            toast.classList.add(type);
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+
+            if (window.lucide) lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        };
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        console.log('🚀 Inicializando Economia...');
+
+        const user = await AuthService.checkAuth();
+        if (user) {
+            document.getElementById('userName').textContent = user.nome || 'Usuário';
+            document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
+        }
+
+        if (window.lucide) lucide.createIcons();
+
+        const manager = new EconomiaManager();
+        window.economiaManager = manager;
+
+        console.log('✅ Economia inicializado!');
+    </script>
+</body>
+
+</html>

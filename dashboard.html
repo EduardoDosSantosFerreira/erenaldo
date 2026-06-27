@@ -27,7 +27,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .loading-text {
@@ -231,43 +233,43 @@
                         <div class="stat-value primary" id="totalClientes">0</div>
                         <div class="stat-label">Clientes</div>
                     </div>
-                    
+
                     <!-- Serviços Concluídos -->
                     <div class="stat-card">
                         <div class="stat-value success" id="servicosConcluidos">0</div>
                         <div class="stat-label">Concluídos</div>
                     </div>
-                    
+
                     <!-- Serviços Pendentes -->
                     <div class="stat-card">
                         <div class="stat-value warning" id="servicosPendentes">0</div>
                         <div class="stat-label">Pendentes</div>
                     </div>
-                    
+
                     <!-- Serviços Cancelados -->
                     <div class="stat-card">
                         <div class="stat-value danger" id="servicosCancelados">0</div>
                         <div class="stat-label">Cancelados</div>
                     </div>
-                    
+
                     <!-- Total de Serviços -->
                     <div class="stat-card">
                         <div class="stat-value" id="totalServicos">0</div>
                         <div class="stat-label">Total Serviços</div>
                     </div>
-                    
+
                     <!-- Notas Fiscais -->
                     <div class="stat-card">
                         <div class="stat-value success" id="totalNotas">0</div>
                         <div class="stat-label">Notas Fiscais</div>
                     </div>
-                    
+
                     <!-- Valor Recebido -->
                     <div class="stat-card">
                         <div class="stat-value success" id="valorRecebido">R$ 0,00</div>
                         <div class="stat-label">Valor Recebido</div>
                     </div>
-                    
+
                     <!-- Valor a Receber -->
                     <div class="stat-card">
                         <div class="stat-value warning" id="valorAReceber">R$ 0,00</div>
@@ -277,9 +279,11 @@
 
                 <!-- Últimos Serviços -->
                 <div style="margin-top: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="font-size: 16px; color: var(--gray-700);">📋 Últimos Serviços</h3>
-                        <a href="servicos.html" style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver todos →</a>
+                        <a href="servicos.html"
+                            style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver todos →</a>
                     </div>
                     <div id="ultimosServicos">
                         <div class="empty-state" style="padding: 20px;">
@@ -290,9 +294,11 @@
 
                 <!-- Últimas Notas -->
                 <div style="margin-top: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="font-size: 16px; color: var(--gray-700);">📄 Últimas Notas</h3>
-                        <a href="notas.html" style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver todas →</a>
+                        <a href="notas.html" style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver
+                            todas →</a>
                     </div>
                     <div id="ultimasNotas">
                         <div class="empty-state" style="padding: 20px;">
@@ -320,6 +326,10 @@
             <a href="notas.html">
                 <i data-lucide="file-text"></i>
                 <span>Notas</span>
+            </a>
+            <a href="economia.html">
+                <i data-lucide="dollar-sign"></i>
+                <span>Economia</span>
             </a>
         </nav>
     </div>

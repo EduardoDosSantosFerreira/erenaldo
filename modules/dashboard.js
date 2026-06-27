@@ -42,20 +42,27 @@ export class Dashboard {
                 // Notas fiscais
                 supabase.from('notas').select('*', { count: 'exact', head: true }),
                 
-                // Serviços com valor (para calcular valores recebidos)
-                supabase.from('servicos').select('valor, status')
+                // Serviços com valor e status para cálculo financeiro
+                supabase.from('servicos').select('valor, status, pago')
             ]);
 
-            // 2. Calcular valores
-            const valorTotalConcluidos = servicosComValor.data
-                ?.filter(s => s.status === 'concluido')
+            // ============================================
+            // LÓGICA FINANCEIRA CORRIGIDA
+            // Apenas serviços CONCLUÍDOS entram no fluxo financeiro
+            // ============================================
+            
+            // Valor Recebido = serviços concluídos E pagos
+            const valorRecebido = servicosComValor.data
+                ?.filter(s => s.status === 'concluido' && s.pago === true)
                 ?.reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
 
-            const valorTotalPendentes = servicosComValor.data
-                ?.filter(s => s.status === 'pendente')
+            // Valor a Receber = serviços concluídos E NÃO pagos
+            // (Serviços pendentes NÃO entram no valor a receber)
+            const valorAReceber = servicosComValor.data
+                ?.filter(s => s.status === 'concluido' && s.pago !== true)
                 ?.reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
 
-            // 3. Buscar últimos serviços
+            // 3. Buscar últimos serviços (com pagamento)
             const { data: ultimosServicos } = await supabase
                 .from('servicos')
                 .select(`
@@ -83,8 +90,8 @@ export class Dashboard {
                 servicosPendentes: servicosPendentes.count || 0,
                 servicosCancelados: servicosCancelados.count || 0,
                 notas: notas.count || 0,
-                valorRecebido: valorTotalConcluidos,
-                valorAReceber: valorTotalPendentes
+                valorRecebido: valorRecebido,
+                valorAReceber: valorAReceber
             });
 
             // 6. Renderizar listas
@@ -154,7 +161,11 @@ export class Dashboard {
             'cancelado': 'Cancelado'
         };
 
-        container.innerHTML = servicos.map(s => `
+        container.innerHTML = servicos.map(s => {
+            const isPago = s.pago === true;
+            const pagoLabel = isPago ? '💰 Pago' : '⏳ A Pagar';
+            
+            return `
             <div class="servico-item">
                 <div class="servico-info">
                     <span class="servico-nome">${s.servico}</span>
@@ -163,10 +174,13 @@ export class Dashboard {
                 <div class="servico-meta">
                     ${s.valor ? `<span class="servico-valor">R$ ${s.valor.toFixed(2)}</span>` : ''}
                     <span class="servico-status ${s.status}">${statusLabels[s.status] || s.status}</span>
+                    ${s.status === 'concluido' ? 
+                        `<span class="payment-badge ${isPago ? 'pago' : 'nao-pago'}">${pagoLabel}</span>` : 
+                        ''}
                     <span class="servico-data">📅 ${s.data}</span>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     renderUltimasNotas(notas) {
