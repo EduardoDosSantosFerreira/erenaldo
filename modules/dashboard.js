@@ -5,7 +5,6 @@ export class Dashboard {
     constructor() {
         this.calendar = null;
         this.servicos = [];
-        this.selectedDate = null;
         this.init();
     }
 
@@ -23,6 +22,7 @@ export class Dashboard {
         try {
             console.log('📥 Carregando dados do dashboard...');
 
+            // Buscar todos os dados necessários
             const [
                 clientes,
                 servicos,
@@ -38,10 +38,13 @@ export class Dashboard {
                 supabase.from('servicos').select('*', { count: 'exact', head: true }).eq('status', 'pendente'),
                 supabase.from('servicos').select('*', { count: 'exact', head: true }).eq('status', 'cancelado'),
                 supabase.from('notas').select('*', { count: 'exact', head: true }),
-                supabase.from('servicos').select('id, valor, status, pago, data, servico, cliente_id')
+                supabase.from('servicos').select(`
+                    *,
+                    clientes:cliente_id(id, nome, telefone, email)
+                `)
             ]);
 
-            // Lógica financeira
+            // Calcular valores financeiros
             const valorRecebido = servicosComValor.data
                 ?.filter(s => s.status === 'concluido' && s.pago === true)
                 ?.reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
@@ -50,26 +53,13 @@ export class Dashboard {
                 ?.filter(s => s.status === 'concluido' && s.pago !== true)
                 ?.reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
 
+            const totalGeral = valorRecebido + valorAReceber;
+            const percentualRecebido = totalGeral > 0 ? (valorRecebido / totalGeral) * 100 : 0;
+
+            // Armazenar serviços
             this.servicos = servicosComValor.data || [];
 
-            const { data: ultimosServicos } = await supabase
-                .from('servicos')
-                .select(`
-                    *,
-                    clientes:cliente_id(nome)
-                `)
-                .order('data', { ascending: false })
-                .limit(5);
-
-            const { data: ultimasNotas } = await supabase
-                .from('notas')
-                .select(`
-                    *,
-                    clientes:cliente_id(nome)
-                `)
-                .order('data_emissao', { ascending: false })
-                .limit(5);
-
+            // Atualizar cards
             this.updateStats({
                 clientes: clientes.count || 0,
                 servicos: servicos.count || 0,
@@ -77,14 +67,22 @@ export class Dashboard {
                 servicosPendentes: servicosPendentes.count || 0,
                 servicosCancelados: servicosCancelados.count || 0,
                 notas: notas.count || 0,
-                valorRecebido: valorRecebido,
-                valorAReceber: valorAReceber
+                valorRecebido,
+                valorAReceber
             });
 
-            this.renderUltimosServicos(ultimosServicos || []);
-            this.renderUltimasNotas(ultimasNotas || []);
+            // Atualizar resumo financeiro
+            document.getElementById('resumoRecebido').textContent = `R$ ${valorRecebido.toFixed(2)}`;
+            document.getElementById('resumoAReceber').textContent = `R$ ${valorAReceber.toFixed(2)}`;
+            document.getElementById('resumoTotal').textContent = `R$ ${totalGeral.toFixed(2)}`;
+            document.getElementById('resumoPercentual').textContent = `${percentualRecebido.toFixed(1)}%`;
 
-            console.log('✅ Dashboard carregado com sucesso!', this.servicos.length, 'serviços');
+            // Renderizar listas
+            this.renderUltimosServicos(servicosComValor.data || []);
+            this.renderProximosServicos(servicosComValor.data || []);
+            this.renderTimeline();
+
+            console.log('✅ Dashboard carregado com sucesso!');
 
         } catch (error) {
             console.error('❌ Erro ao carregar dashboard:', error);
@@ -107,23 +105,9 @@ export class Dashboard {
             valorAReceber: `R$ ${data.valorAReceber.toFixed(2)}`
         };
 
-        const colorMap = {
-            valorRecebido: 'success',
-            valorAReceber: 'warning',
-            servicosCancelados: 'danger',
-            servicosConcluidos: 'success',
-            servicosPendentes: 'warning',
-            totalClientes: 'primary'
-        };
-
         Object.entries(elements).forEach(([id, value]) => {
             const el = document.getElementById(id);
-            if (el) {
-                el.textContent = value;
-                if (colorMap[id]) {
-                    el.className = `stat-value ${colorMap[id]}`;
-                }
-            }
+            if (el) el.textContent = value;
         });
     }
 
@@ -131,90 +115,30 @@ export class Dashboard {
     // NAVEGAÇÃO DOS CARDS
     // ============================================
     setupCardNavigation() {
-        // Card "Clientes" → clientes.html
-        const clientesCard = document.getElementById('totalClientes')?.closest('.stat-card');
-        if (clientesCard) {
-            clientesCard.style.cursor = 'pointer';
-            clientesCard.addEventListener('click', () => {
-                window.location.href = 'clientes.html';
+        document.querySelectorAll('.card-indicator').forEach(card => {
+            card.addEventListener('click', () => {
+                const url = card.dataset.url;
+                if (url) window.location.href = url;
             });
-        }
-
-        // Card "Total Serviços" → servicos.html
-        const totalServicosCard = document.getElementById('totalServicos')?.closest('.stat-card');
-        if (totalServicosCard) {
-            totalServicosCard.style.cursor = 'pointer';
-            totalServicosCard.addEventListener('click', () => {
-                window.location.href = 'servicos.html';
-            });
-        }
-
-        // Card "Concluídos" → servicos.html?status=concluido
-        const concluidosCard = document.getElementById('servicosConcluidos')?.closest('.stat-card');
-        if (concluidosCard) {
-            concluidosCard.style.cursor = 'pointer';
-            concluidosCard.addEventListener('click', () => {
-                window.location.href = 'servicos.html?status=concluido';
-            });
-        }
-
-        // Card "Pendentes" → servicos.html?status=pendente
-        const pendentesCard = document.getElementById('servicosPendentes')?.closest('.stat-card');
-        if (pendentesCard) {
-            pendentesCard.style.cursor = 'pointer';
-            pendentesCard.addEventListener('click', () => {
-                window.location.href = 'servicos.html?status=pendente';
-            });
-        }
-
-        // Card "Cancelados" → servicos.html?status=cancelado
-        const canceladosCard = document.getElementById('servicosCancelados')?.closest('.stat-card');
-        if (canceladosCard) {
-            canceladosCard.style.cursor = 'pointer';
-            canceladosCard.addEventListener('click', () => {
-                window.location.href = 'servicos.html?status=cancelado';
-            });
-        }
-
-        // Card "Notas Fiscais" → notas.html
-        const notasCard = document.getElementById('totalNotas')?.closest('.stat-card');
-        if (notasCard) {
-            notasCard.style.cursor = 'pointer';
-            notasCard.addEventListener('click', () => {
-                window.location.href = 'notas.html';
-            });
-        }
-
-        // Card "Valor Recebido" → economia.html?filtro=recebido
-        const valorRecebidoCard = document.getElementById('valorRecebido')?.closest('.stat-card');
-        if (valorRecebidoCard) {
-            valorRecebidoCard.style.cursor = 'pointer';
-            valorRecebidoCard.addEventListener('click', () => {
-                window.location.href = 'economia.html?filtro=recebido';
-            });
-        }
-
-        // Card "Valor a Receber" → economia.html?filtro=receber
-        const valorAReceberCard = document.getElementById('valorAReceber')?.closest('.stat-card');
-        if (valorAReceberCard) {
-            valorAReceberCard.style.cursor = 'pointer';
-            valorAReceberCard.addEventListener('click', () => {
-                window.location.href = 'economia.html?filtro=receber';
-            });
-        }
+        });
     }
 
     // ============================================
-    // RENDERIZAÇÃO DE LISTAS
+    // RENDERIZAÇÃO DOS ÚLTIMOS SERVIÇOS
     // ============================================
     renderUltimosServicos(servicos) {
         const container = document.getElementById('ultimosServicos');
         if (!container) return;
 
-        if (servicos.length === 0) {
+        const ultimos = servicos
+            .sort((a, b) => new Date(b.data) - new Date(a.data))
+            .slice(0, 5);
+
+        if (ultimos.length === 0) {
             container.innerHTML = `
-                <div class="empty-state" style="padding: 20px;">
-                    <p style="color: var(--gray-400);">Nenhum serviço registrado</p>
+                <div class="empty-state">
+                    <i data-lucide="inbox"></i>
+                    <p>Nenhum serviço registrado</p>
                 </div>
             `;
             return;
@@ -226,33 +150,10 @@ export class Dashboard {
             'cancelado': 'Cancelado'
         };
 
-        container.innerHTML = servicos.map(s => {
+        container.innerHTML = ultimos.map(s => {
             const isPago = s.pago === true;
-
-            // ============================================
-            // COR DO VALOR BASEADA NO STATUS DE PAGAMENTO
-            // ============================================
-            // Verde: pagamento realizado (pago)
-            // Laranja: pagamento pendente (não pago)
-            // Sem cor: sem valor definido ou serviço não concluído
-            let valorColor = '';
-            let valorClass = '';
-
-            if (s.valor) {
-                if (s.status === 'concluido') {
-                    if (isPago) {
-                        valorColor = '#4CAF50'; // Verde
-                        valorClass = 'valor-pago';
-                    } else {
-                        valorColor = '#F57C00'; // Laranja
-                        valorClass = 'valor-pendente';
-                    }
-                } else {
-                    valorColor = 'var(--gray-500)'; // Cinza para pendentes/cancelados
-                    valorClass = 'valor-normal';
-                }
-            }
-
+            const valorClass = (s.status === 'concluido' && isPago) ? 'pago' : 'pendente';
+            
             return `
             <div class="servico-item" onclick="window.dashboard?.goToServico('${s.id}')">
                 <div class="servico-info">
@@ -260,57 +161,151 @@ export class Dashboard {
                     <span class="servico-cliente">👤 ${s.clientes?.nome || 'Cliente não informado'}</span>
                 </div>
                 <div class="servico-meta">
-                    ${s.valor ? `
-                        <span class="servico-valor ${valorClass}" style="color: ${valorColor};">
-                            R$ ${s.valor.toFixed(2)}
-                            ${s.status === 'concluido' ? (isPago ? ' ✅' : ' ⏳') : ''}
-                        </span>
-                    ` : ''}
+                    ${s.valor ? `<span class="servico-valor ${valorClass}">R$ ${s.valor.toFixed(2)}</span>` : ''}
                     <span class="servico-status ${s.status}">${statusLabels[s.status] || s.status}</span>
-                    ${s.status === 'concluido' ?
-                    `<span class="payment-badge ${isPago ? 'pago' : 'nao-pago'}">${isPago ? '💰 Pago' : '⏳ A Pagar'}</span>` :
-                    ''}
                     <span class="servico-data">📅 ${s.data}</span>
                 </div>
             </div>
         `}).join('');
     }
 
-    renderUltimasNotas(notas) {
-        const container = document.getElementById('ultimasNotas');
+    // ============================================
+    // RENDERIZAÇÃO DOS PRÓXIMOS SERVIÇOS
+    // ============================================
+    renderProximosServicos(servicos) {
+        const container = document.getElementById('proximosServicos');
         if (!container) return;
 
-        if (notas.length === 0) {
+        const hoje = new Date().toISOString().split('T')[0];
+        const proximos = servicos
+            .filter(s => s.status === 'pendente' || s.status === 'agendado')
+            .filter(s => s.data >= hoje)
+            .sort((a, b) => new Date(a.data) - new Date(b.data))
+            .slice(0, 5);
+
+        if (proximos.length === 0) {
             container.innerHTML = `
-                <div class="empty-state" style="padding: 20px;">
-                    <p style="color: var(--gray-400);">Nenhuma nota fiscal registrada</p>
+                <div class="empty-state">
+                    <i data-lucide="inbox"></i>
+                    <p>Nenhum serviço agendado</p>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = notas.map(n => `
-            <div class="nota-item">
-                <div class="nota-info">
-                    <span class="nota-servico">${n.servico_prestado}</span>
-                    <span class="nota-cliente">👤 ${n.clientes?.nome || 'Cliente não informado'}</span>
+        container.innerHTML = proximos.map(s => `
+            <div class="servico-item" onclick="window.dashboard?.goToServico('${s.id}')">
+                <div class="servico-info">
+                    <span class="servico-nome">${s.servico}</span>
+                    <span class="servico-cliente">👤 ${s.clientes?.nome || 'Cliente não informado'}</span>
                 </div>
-                <div class="nota-meta">
-                    <span class="nota-valor">R$ ${n.valor.toFixed(2)}</span>
-                    ${n.numero_nota ? `<span class="nota-numero">#${n.numero_nota}</span>` : ''}
-                    <span class="nota-data">📅 ${n.data_emissao}</span>
-                    ${n.arquivo_url ? `<a href="${n.arquivo_url}" target="_blank" class="nota-arquivo" title="Ver arquivo">📎</a>` : ''}
+                <div class="servico-meta">
+                    <span class="servico-data">📅 ${s.data}</span>
+                    ${s.hora ? `<span class="servico-hora">🕐 ${s.hora}</span>` : ''}
+                    <span class="servico-status ${s.status}">${s.status === 'pendente' ? 'Pendente' : 'Agendado'}</span>
                 </div>
             </div>
         `).join('');
     }
 
     // ============================================
+    // TIMELINE
+    // ============================================
+    renderTimeline() {
+        const container = document.getElementById('timelineContent');
+        if (!container) return;
+
+        // Criar eventos da timeline
+        const eventos = [];
+
+        // Serviços criados
+        this.servicos.forEach(s => {
+            eventos.push({
+                data: s.created_at || s.data,
+                tipo: 'servico_criado',
+                descricao: `Serviço "${s.servico}" criado para ${s.clientes?.nome || 'cliente'}`,
+                link: `servicos.html?id=${s.id}`,
+                icone: 'briefcase',
+                cor: 'blue'
+            });
+
+            if (s.status === 'concluido') {
+                eventos.push({
+                    data: s.updated_at || s.data,
+                    tipo: 'servico_concluido',
+                    descricao: `Serviço "${s.servico}" concluído para ${s.clientes?.nome || 'cliente'}`,
+                    link: `servicos.html?id=${s.id}`,
+                    icone: 'check-circle',
+                    cor: 'green'
+                });
+            }
+
+            if (s.pago === true && s.status === 'concluido') {
+                eventos.push({
+                    data: s.updated_at || s.data,
+                    tipo: 'pagamento_recebido',
+                    descricao: `Pagamento de R$ ${(s.valor || 0).toFixed(2)} recebido de ${s.clientes?.nome || 'cliente'}`,
+                    link: `servicos.html?id=${s.id}`,
+                    icone: 'dollar-sign',
+                    cor: 'green'
+                });
+            }
+        });
+
+        // Ordenar por data (mais recentes primeiro)
+        eventos.sort((a, b) => new Date(b.data) - new Date(a.data));
+        const recentes = eventos.slice(0, 10);
+
+        if (recentes.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i data-lucide="inbox"></i>
+                    <p>Nenhuma atividade recente</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = recentes.map(e => `
+            <div class="timeline-item">
+                <div class="timeline-icon ${e.cor}">
+                    <i data-lucide="${e.icone}"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-text">${e.descricao}</div>
+                    <div class="timeline-time">${this.formatarData(e.data)}</div>
+                    <a href="${e.link}" class="timeline-link">Ver detalhes</a>
+                </div>
+            </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    formatarData(data) {
+        if (!data) return 'Data desconhecida';
+        const date = new Date(data);
+        const now = new Date();
+        const diff = Math.floor((now - date) / (1000 * 60));
+
+        if (diff < 1) return 'Agora mesmo';
+        if (diff < 60) return `${diff} min atrás`;
+        if (diff < 1440) return `${Math.floor(diff / 60)}h atrás`;
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // ============================================
+    // GO TO SERVIÇO
+    // ============================================
+    goToServico(servicoId) {
+        if (!servicoId) return;
+        window.location.href = `servicos.html?id=${servicoId}`;
+    }
+
+    // ============================================
     // CALENDÁRIO
     // ============================================
     getEvents() {
-        console.log('📊 Gerando eventos para o calendário...');
-
         return this.servicos.map(s => {
             const statusColors = {
                 'pendente': '#F57C00',
@@ -336,27 +331,19 @@ export class Dashboard {
 
     async initCalendar() {
         const calendarEl = document.getElementById('calendar');
-        if (!calendarEl) {
-            console.warn('⚠️ Elemento do calendário não encontrado');
-            return;
-        }
+        if (!calendarEl) return;
 
         if (typeof FullCalendar === 'undefined') {
-            console.log('⏳ Aguardando FullCalendar carregar...');
             await new Promise(resolve => {
                 const check = () => {
-                    if (typeof FullCalendar !== 'undefined') {
-                        resolve();
-                    } else {
-                        setTimeout(check, 100);
-                    }
+                    if (typeof FullCalendar !== 'undefined') resolve();
+                    else setTimeout(check, 100);
                 };
                 check();
             });
         }
 
         const events = this.getEvents();
-        console.log('📊 Eventos gerados:', events.length);
 
         this.calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -364,7 +351,7 @@ export class Dashboard {
             events: events,
             editable: false,
             selectable: true,
-            dayMaxEvents: 2,
+            dayMaxEvents: 3,
             weekends: true,
             eventClick: this.handleEventClick.bind(this),
             dateClick: this.handleDateClick.bind(this),
@@ -377,7 +364,7 @@ export class Dashboard {
             },
             views: {
                 dayGridMonth: {
-                    dayMaxEvents: 3
+                    dayMaxEvents: 4
                 }
             }
         });
@@ -385,13 +372,12 @@ export class Dashboard {
         this.calendar.render();
         this.updateCalendarTitle();
 
-        const today = new Date();
-        this.selectDate(today);
+        // Selecionar hoje
+        this.selectDate(new Date());
     }
 
     updateCalendarTitle() {
         if (!this.calendar) return;
-
         const view = this.calendar.view;
         const titleEl = document.getElementById('calendarTitle');
         if (!titleEl) return;
@@ -402,65 +388,12 @@ export class Dashboard {
                 month: 'long',
                 year: 'numeric'
             });
-        } else if (view.type === 'timeGridWeek') {
-            const start = view.activeStart;
-            const end = view.activeEnd;
-            const startStr = start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-            const endStr = end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
-            titleEl.textContent = `${startStr} - ${endStr}`;
-        } else if (view.type === 'timeGridDay') {
-            const date = view.activeStart;
-            titleEl.textContent = date.toLocaleDateString('pt-BR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
         }
     }
 
-    // ============================================
-    // HANDLE EVENT CLICK
-    // ============================================
     handleEventClick(info) {
-        console.log('🖱️ Evento clicado:', info.event);
-
-        let eventId = info.event.id;
-
-        if (!eventId || eventId === 'undefined' || eventId === 'null' || eventId === '') {
-            const props = info.event.extendedProps;
-            if (props && props.id) {
-                eventId = props.id;
-            } else {
-                console.error('❌ Não foi possível obter o ID do evento');
-                this.showNotification('Erro ao carregar serviço!', 'error');
-                return;
-            }
-        }
-
-        eventId = String(eventId);
-
-        if (!eventId || eventId === 'undefined' || eventId === 'null' || eventId === '') {
-            console.error('❌ ID do evento inválido:', eventId);
-            this.showNotification('Erro ao carregar serviço!', 'error');
-            return;
-        }
-
-        console.log('📋 Redirecionando para serviço ID:', eventId);
-        this.goToServico(eventId);
-    }
-
-    // ============================================
-    // REDIRECIONAR PARA PÁGINA DE SERVIÇOS
-    // ============================================
-    goToServico(servicoId) {
-        if (!servicoId || servicoId === 'undefined' || servicoId === 'null' || servicoId === '') {
-            this.showNotification('ID do serviço inválido!', 'error');
-            return;
-        }
-
-        console.log('🔗 Redirecionando para:', `servicos.html?id=${servicoId}`);
-        window.location.href = `servicos.html?id=${servicoId}`;
+        const eventId = info.event.id;
+        if (eventId) this.goToServico(eventId);
     }
 
     handleDateClick(info) {
@@ -470,9 +403,7 @@ export class Dashboard {
     handleEventMount(info) {
         const props = info.event.extendedProps;
         if (props) {
-            const title = props.servico || 'Serviço';
-            const cliente = props.clienteNome || 'Cliente';
-            info.el.title = `${title} - ${cliente}`;
+            info.el.title = `${props.servico} - ${props.clienteNome}`;
             info.el.style.cursor = 'pointer';
         }
     }
@@ -486,9 +417,10 @@ export class Dashboard {
     }
 
     selectDate(date) {
-        this.selectedDate = date;
         const dateStr = date.toISOString().split('T')[0];
+        const dayEvents = this.servicos.filter(s => s.data === dateStr);
 
+        // Atualizar título do dia
         const selectedDateEl = document.getElementById('selectedDate');
         if (selectedDateEl) {
             selectedDateEl.innerHTML = `<strong>${date.toLocaleDateString('pt-BR', {
@@ -499,64 +431,46 @@ export class Dashboard {
             })}</strong>`;
         }
 
-        const dayEvents = this.servicos.filter(s => s.data === dateStr);
-        this.renderDayDetails(dayEvents, date);
-    }
+        // Mostrar eventos do dia no detalhe (já existe na seção de atividades)
+        const dayDetails = document.getElementById('dayDetailsContent');
+        if (dayDetails) {
+            if (dayEvents.length === 0) {
+                dayDetails.innerHTML = `
+                    <div class="empty-day">
+                        <span class="empty-icon">📭</span>
+                        <h4>Nenhum serviço neste dia</h4>
+                        <p>Não há atividades registradas para ${date.toLocaleDateString('pt-BR', {
+                            day: 'numeric',
+                            month: 'long'
+                        })}</p>
+                    </div>
+                `;
+            } else {
+                const statusLabels = {
+                    'pendente': 'Pendente',
+                    'concluido': 'Concluído',
+                    'cancelado': 'Cancelado'
+                };
 
-    renderDayDetails(events, date) {
-        const container = document.getElementById('dayDetailsContent');
-        if (!container) return;
+                dayDetails.innerHTML = dayEvents.map(s => `
+                    <div class="day-event-item" onclick="window.dashboard?.goToServico('${s.id}')">
+                        <div class="event-header">
+                            <span class="event-title">${s.servico}</span>
+                            <span class="event-status ${s.status}">${statusLabels[s.status]}</span>
+                        </div>
+                        <div class="event-body">
+                            <span class="event-info">
+                                <i data-lucide="user"></i>
+                                <strong>${s.clientes?.nome || 'Cliente não informado'}</strong>
+                            </span>
+                            ${s.hora ? `<span class="event-info"><i data-lucide="clock"></i> ${s.hora}</span>` : ''}
+                            ${s.valor ? `<span class="event-info event-valor">R$ ${s.valor.toFixed(2)}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('');
 
-        if (events.length === 0) {
-            container.innerHTML = `
-                <div class="empty-day">
-                    <div class="empty-icon">📭</div>
-                    <h4>Nenhum serviço neste dia</h4>
-                    <p>Não há atividades registradas para ${date.toLocaleDateString('pt-BR', {
-                day: 'numeric',
-                month: 'long'
-            })}</p>
-                </div>
-            `;
-            return;
-        }
-
-        const statusLabels = {
-            'pendente': 'Pendente',
-            'concluido': 'Concluído',
-            'cancelado': 'Cancelado'
-        };
-
-        container.innerHTML = events.map(s => `
-            <div class="day-event-item" onclick="window.dashboard?.goToServico('${s.id}')">
-                <div class="event-header">
-                    <span class="event-title">${s.servico || 'Serviço'}</span>
-                    <span class="event-status ${s.status}">${statusLabels[s.status] || s.status}</span>
-                </div>
-                <div class="event-body">
-                    <span class="event-info">
-                        <i data-lucide="user"></i>
-                        ${s.clientes?.nome || 'Cliente não informado'}
-                    </span>
-                    ${s.valor ? `
-                        <span class="event-info event-valor" style="color: ${s.status === 'concluido' ? (s.pago ? '#4CAF50' : '#F57C00') : 'var(--gray-500)'}; font-weight: 600;">
-                            <i data-lucide="dollar-sign"></i>
-                            R$ ${s.valor.toFixed(2)}
-                            ${s.status === 'concluido' ? (s.pago ? ' ✅' : ' ⏳') : ''}
-                        </span>
-                    ` : ''}
-                    ${s.pago !== undefined && s.status === 'concluido' ? `
-                        <span class="event-info">
-                            <i data-lucide="${s.pago ? 'check-circle' : 'clock'}"></i>
-                            ${s.pago ? '✅ Pago' : '⏳ Aguardando pagamento'}
-                        </span>
-                    ` : ''}
-                </div>
-            </div>
-        `).join('');
-
-        if (window.lucide) {
-            lucide.createIcons();
+                if (window.lucide) lucide.createIcons();
+            }
         }
     }
 
@@ -564,6 +478,7 @@ export class Dashboard {
     // EVENT LISTENERS
     // ============================================
     setupEventListeners() {
+        // Navegação do calendário
         document.getElementById('prevBtn')?.addEventListener('click', () => {
             if (this.calendar) {
                 this.calendar.prev();
@@ -586,21 +501,10 @@ export class Dashboard {
             }
         });
 
-        document.querySelectorAll('.view-buttons button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.view-buttons button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                if (this.calendar) {
-                    this.calendar.changeView(btn.dataset.view);
-                    this.updateCalendarTitle();
-                }
-            });
-        });
-
+        // Refresh
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('eventModal');
-                if (modal) modal.style.display = 'none';
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                // Deixar o navegador fazer refresh
             }
         });
     }
@@ -617,9 +521,20 @@ export class Dashboard {
     }
 }
 
-// Tornar disponível globalmente
+// Inicializar
 window.dashboard = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Mostrar loading
+    const loading = document.getElementById('loadingDashboard');
+    const data = document.getElementById('dashboardData');
+
+    // Inicializar dashboard
     window.dashboard = new Dashboard();
+
+    // Esconder loading e mostrar dados
+    setTimeout(() => {
+        if (loading) loading.style.display = 'none';
+        if (data) data.style.display = 'block';
+    }, 500);
 });

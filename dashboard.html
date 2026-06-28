@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ERENALDO - Dashboard</title>
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css">
 </head>
-
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -21,123 +20,223 @@
         </header>
 
         <!-- Content -->
-        <div id="dashboardContent">
-            <!-- Loading inicial -->
+        <main class="dashboard-main">
+            <!-- Loading -->
             <div id="loadingDashboard" class="loading-container">
                 <div class="loading-spinner"></div>
                 <span class="loading-text">Carregando dados...</span>
             </div>
 
-            <!-- Conteúdo do Dashboard -->
+            <!-- Dashboard Content -->
             <div id="dashboardData" style="display: none;">
-                <!-- Stats Grid - 8 cards -->
-                <div class="stats-grid" id="dashboardStats">
-                    <div class="stat-card">
-                        <div class="stat-value primary" id="totalClientes">0</div>
-                        <div class="stat-label">Clientes</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value success" id="servicosConcluidos">0</div>
-                        <div class="stat-label">Concluídos</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value warning" id="servicosPendentes">0</div>
-                        <div class="stat-label">Pendentes</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value danger" id="servicosCancelados">0</div>
-                        <div class="stat-label">Cancelados</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalServicos">0</div>
-                        <div class="stat-label">Total Serviços</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value success" id="totalNotas">0</div>
-                        <div class="stat-label">Notas Fiscais</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value success" id="valorRecebido">R$ 0,00</div>
-                        <div class="stat-label">Valor Recebido</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value warning" id="valorAReceber">R$ 0,00</div>
-                        <div class="stat-label">Valor a Receber</div>
-                    </div>
-                </div>
 
-                <!-- Dashboard Grid com Calendário -->
-                <div class="dashboard-grid">
-                    <!-- Calendário -->
-                    <div class="calendar-section">
-                        <div class="calendar-header">
-                            <h3>
-                                <i data-lucide="calendar"></i>
-                                Agenda de Serviços
-                            </h3>
-                            <div class="nav-buttons">
-                                <button id="prevBtn" title="Anterior">‹</button>
-                                <span class="current-date" id="calendarTitle">Carregando...</span>
-                                <button id="nextBtn" title="Próximo">›</button>
-                                <button class="today-btn" id="todayBtn">Hoje</button>
+                <!-- ============================================
+                SECTION 1: CARDS DE INDICADORES (2x2x2x2)
+                ============================================ -->
+                <section class="cards-section">
+                    <div class="cards-grid">
+                        <!-- Linha 1 -->
+                        <div class="card-indicator" data-url="clientes.html">
+                            <div class="card-icon blue">
+                                <i data-lucide="users"></i>
                             </div>
-                            <div class="view-buttons">
-                                <button class="active" data-view="dayGridMonth">Mês</button>
-                                <button data-view="timeGridWeek">Semana</button>
-                                <button data-view="timeGridDay">Dia</button>
+                            <div class="card-content">
+                                <span class="card-value" id="totalClientes">0</span>
+                                <span class="card-label">Clientes</span>
                             </div>
                         </div>
-                        <div id="calendar"></div>
-                    </div>
-
-                    <!-- Detalhes do Dia -->
-                    <div class="day-details-section" id="dayDetails">
-                        <div class="day-details-header">
-                            <h3>
-                                <i data-lucide="list"></i>
-                                Atividades do Dia
-                            </h3>
-                            <span class="day-date" id="selectedDate">
-                                <strong>Selecione um dia</strong>
-                            </span>
+                        <div class="card-indicator" data-url="servicos.html">
+                            <div class="card-icon green">
+                                <i data-lucide="briefcase"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="totalServicos">0</span>
+                                <span class="card-label">Serviços</span>
+                            </div>
                         </div>
-                        <div id="dayDetailsContent">
-                            <div class="empty-day">
-                                <span class="empty-icon">📅</span>
-                                <h4>Nenhum dia selecionado</h4>
-                                <p>Clique em uma data no calendário para ver os detalhes</p>
+
+                        <!-- Linha 2 -->
+                        <div class="card-indicator" data-url="servicos.html?status=concluido">
+                            <div class="card-icon success">
+                                <i data-lucide="check-circle"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="servicosConcluidos">0</span>
+                                <span class="card-label">Concluídos</span>
+                            </div>
+                        </div>
+                        <div class="card-indicator" data-url="servicos.html?status=pendente">
+                            <div class="card-icon warning">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="servicosPendentes">0</span>
+                                <span class="card-label">Pendentes</span>
+                            </div>
+                        </div>
+
+                        <!-- Linha 3 -->
+                        <div class="card-indicator" data-url="servicos.html?status=cancelado">
+                            <div class="card-icon danger">
+                                <i data-lucide="x-circle"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="servicosCancelados">0</span>
+                                <span class="card-label">Cancelados</span>
+                            </div>
+                        </div>
+                        <div class="card-indicator" data-url="notas.html">
+                            <div class="card-icon purple">
+                                <i data-lucide="file-text"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="totalNotas">0</span>
+                                <span class="card-label">Notas Fiscais</span>
+                            </div>
+                        </div>
+
+                        <!-- Linha 4 -->
+                        <div class="card-indicator" data-url="economia.html?filtro=recebido">
+                            <div class="card-icon money-green">
+                                <i data-lucide="dollar-sign"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="valorRecebido">R$ 0,00</span>
+                                <span class="card-label">Recebido</span>
+                            </div>
+                        </div>
+                        <div class="card-indicator" data-url="economia.html?filtro=receber">
+                            <div class="card-icon money-orange">
+                                <i data-lucide="dollar-sign"></i>
+                            </div>
+                            <div class="card-content">
+                                <span class="card-value" id="valorAReceber">R$ 0,00</span>
+                                <span class="card-label">A Receber</span>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Últimos Serviços -->
-                <div style="margin-top: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h3 style="font-size: 16px; color: var(--gray-700);">📋 Últimos Serviços</h3>
-                        <a href="servicos.html" style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver todos →</a>
+                <!-- ============================================
+                SECTION 2: CALENDÁRIO (OCUPA TUDO)
+                ============================================ -->
+                <section class="calendar-section-full">
+                    <div class="calendar-header">
+                        <h3>
+                            <i data-lucide="calendar"></i>
+                            Agenda de Serviços
+                        </h3>
+                        <div class="nav-buttons">
+                            <button id="prevBtn" title="Anterior">‹</button>
+                            <span class="current-date" id="calendarTitle">Carregando...</span>
+                            <button id="nextBtn" title="Próximo">›</button>
+                            <button class="today-btn" id="todayBtn">Hoje</button>
+                        </div>
+                    </div>
+                    <div id="calendar"></div>
+                </section>
+
+                <!-- ============================================
+                SECTION 3: RESUMO DO DIA (ATIVIDADES DO DIA)
+                ============================================ -->
+                <section class="day-details-full">
+                    <div class="day-details-header">
+                        <h3>
+                            <i data-lucide="list"></i>
+                            Atividades do Dia
+                        </h3>
+                        <span class="day-date" id="selectedDate">
+                            <strong>Selecione um dia no calendário</strong>
+                        </span>
+                    </div>
+                    <div id="dayDetailsContent">
+                        <div class="empty-day">
+                            <span class="empty-icon">📅</span>
+                            <h4>Nenhum dia selecionado</h4>
+                            <p>Clique em uma data no calendário para ver os detalhes</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================
+                SECTION 4: RESUMO FINANCEIRO (2x2)
+                ============================================ -->
+                <section class="financeiro-resumo-full">
+                    <div class="resumo-header">
+                        <h3><i data-lucide="dollar-sign"></i> Resumo Financeiro</h3>
+                        <a href="economia.html" class="resumo-link">Ver detalhes →</a>
+                    </div>
+                    <div class="resumo-grid-full">
+                        <div class="resumo-item">
+                            <span class="resumo-label">Recebido</span>
+                            <span class="resumo-value green" id="resumoRecebido">R$ 0,00</span>
+                        </div>
+                        <div class="resumo-item">
+                            <span class="resumo-label">A Receber</span>
+                            <span class="resumo-value orange" id="resumoAReceber">R$ 0,00</span>
+                        </div>
+                        <div class="resumo-item">
+                            <span class="resumo-label">Total</span>
+                            <span class="resumo-value" id="resumoTotal">R$ 0,00</span>
+                        </div>
+                        <div class="resumo-item">
+                            <span class="resumo-label">% Recebido</span>
+                            <span class="resumo-value purple" id="resumoPercentual">0%</span>
+                        </div>
+                    </div>
+                    <div class="resumo-chart-full">
+                        <canvas id="resumoChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- ============================================
+                SECTION 5: PRÓXIMOS SERVIÇOS (EM CIMA)
+                ============================================ -->
+                <section class="servicos-list-full">
+                    <div class="list-header">
+                        <h3><i data-lucide="calendar-check"></i> Próximos Serviços</h3>
+                    </div>
+                    <div id="proximosServicos">
+                        <div class="empty-state">
+                            <i data-lucide="inbox"></i>
+                            <p>Nenhum serviço agendado</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================
+                SECTION 6: ÚLTIMOS SERVIÇOS (EMBAIXO)
+                ============================================ -->
+                <section class="servicos-list-full">
+                    <div class="list-header">
+                        <h3><i data-lucide="clock"></i> Últimos Serviços</h3>
+                        <a href="servicos.html" class="list-link">Ver todos →</a>
                     </div>
                     <div id="ultimosServicos">
                         <div class="empty-state">
+                            <i data-lucide="inbox"></i>
                             <p>Nenhum serviço registrado</p>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Últimas Notas -->
-                <div style="margin-top: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h3 style="font-size: 16px; color: var(--gray-700);">📄 Últimas Notas</h3>
-                        <a href="notas.html" style="font-size: 13px; color: var(--primary); text-decoration: none;">Ver todas →</a>
+                <!-- ============================================
+                SECTION 7: TIMELINE DE ATIVIDADES
+                ============================================ -->
+                <section class="timeline-section">
+                    <div class="timeline-header">
+                        <h3><i data-lucide="activity"></i> Atividades Recentes</h3>
                     </div>
-                    <div id="ultimasNotas">
+                    <div id="timelineContent">
                         <div class="empty-state">
-                            <p>Nenhuma nota fiscal registrada</p>
+                            <i data-lucide="inbox"></i>
+                            <p>Nenhuma atividade recente</p>
                         </div>
                     </div>
-                </div>
+                </section>
+
             </div>
-        </div>
+        </main>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
@@ -164,73 +263,10 @@
         </nav>
     </div>
 
-    <!-- Modal de Detalhes do Evento -->
-    <div class="modal" id="eventModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h2 id="eventModalTitle">Detalhes do Serviço</h2>
-                <button class="modal-close" id="closeEventModal">
-                    <i data-lucide="x"></i>
-                </button>
-            </div>
-            <div id="eventModalContent">
-                <div style="text-align: center; padding: 20px; color: var(--gray-400);">
-                    Carregando detalhes...
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="closeEventModalBtn">Fechar</button>
-                <a href="#" id="eventModalLink" class="btn btn-primary" style="text-decoration: none; display: none;">
-                    <i data-lucide="external-link"></i>
-                    Ver no Sistema
-                </a>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-    
-    <script type="module">
-        import { AuthService } from './modules/auth.js';
-        import { Dashboard } from './modules/dashboard.js';
-
-        console.log('🚀 Inicializando Dashboard com Calendário...');
-
-        try {
-            const user = await AuthService.checkAuth();
-
-            if (user) {
-                console.log('✅ Usuário autenticado:', user.nome || user.email);
-                document.getElementById('userName').textContent = user.nome || 'Usuário';
-                document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
-
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-
-                console.log('📊 Carregando dados do dashboard...');
-                const dashboard = new Dashboard();
-
-                document.getElementById('loadingDashboard').style.display = 'none';
-                document.getElementById('dashboardData').style.display = 'block';
-            } else {
-                console.log('⚠️ Usuário não autenticado');
-            }
-        } catch (error) {
-            console.error('❌ Erro ao inicializar:', error);
-            document.getElementById('loadingDashboard').innerHTML = `
-                <div style="text-align: center; color: #f44336;">
-                    <p>❌ Erro ao carregar o dashboard</p>
-                    <p style="font-size: 12px; color: var(--gray-500);">${error.message || 'Erro desconhecido'}</p>
-                    <button onclick="window.location.href='/login.html'" class="btn btn-primary" style="margin-top: 16px;">
-                        Voltar para o Login
-                    </button>
-                </div>
-            `;
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="modules/dashboard.js" type="module"></script>
 </body>
-
 </html>
