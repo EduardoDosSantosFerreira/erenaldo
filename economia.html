@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,88 +7,7 @@
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/economia.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* Estilos extras para melhorias pontuais */
-        .economia-container {
-            padding-bottom: 20px;
-        }
-
-        .stat-card .stat-icon {
-            font-size: 32px;
-            margin-bottom: 4px;
-            display: block;
-            line-height: 1;
-        }
-
-        /* Animações de entrada */
-        .stat-card {
-            animation: fadeInUp 0.5s ease forwards;
-            opacity: 0;
-        }
-
-        .stat-card:nth-child(1) { animation-delay: 0.05s; }
-        .stat-card:nth-child(2) { animation-delay: 0.10s; }
-        .stat-card:nth-child(3) { animation-delay: 0.15s; }
-        .stat-card:nth-child(4) { animation-delay: 0.20s; }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Badge de contagem com animação */
-        .badge-count {
-            animation: pulse-badge 2s infinite;
-        }
-
-        @keyframes pulse-badge {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        /* Responsividade adicional */
-        @media (max-width: 480px) {
-            .stat-card .stat-icon {
-                font-size: 24px;
-            }
-
-            .period-filters .btn-filter {
-                flex: 1;
-                justify-content: center;
-                padding: 8px 12px;
-                font-size: 12px;
-            }
-
-            .period-filters .btn-filter i {
-                width: 14px;
-                height: 14px;
-            }
-
-            .chart-container canvas {
-                height: 180px !important;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .period-filters .btn-filter {
-                font-size: 10px;
-                padding: 6px 8px;
-                min-width: 50px;
-            }
-
-            .stat-card .stat-value {
-                font-size: 16px;
-            }
-        }
-    </style>
 </head>
-
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -102,106 +20,190 @@
         </header>
 
         <!-- Content -->
-        <div class="economia-container">
-            <!-- Stats Cards -->
-            <div class="stats-grid" id="statsGrid">
-                <div class="stat-card recebido-card">
-                    <span class="stat-icon">💰</span>
-                    <div class="stat-value recebido" id="totalRecebido">R$ 0,00</div>
-                    <div class="stat-label">Total Recebido</div>
+        <main class="economia-main">
+            <!-- Título da Página -->
+            <div class="page-header">
+                <div class="page-title">
+                    <i data-lucide="dollar-sign"></i>
+                    <div>
+                        <h1>Economia</h1>
+                        <span>Visão financeira completa do negócio</span>
+                    </div>
                 </div>
-                <div class="stat-card receber-card">
-                    <span class="stat-icon">⏳</span>
-                    <div class="stat-value receber" id="totalAReceber">R$ 0,00</div>
-                    <div class="stat-label">Total a Receber</div>
-                </div>
-                <div class="stat-card total-card">
-                    <span class="stat-icon">📊</span>
-                    <div class="stat-value total" id="totalGeral">R$ 0,00</div>
-                    <div class="stat-label">Total Geral</div>
-                </div>
-                <div class="stat-card percentual-card">
-                    <span class="stat-icon">📈</span>
-                    <div class="stat-value percentual" id="percentualRecebido">0%</div>
-                    <div class="stat-label">Percentual Recebido</div>
+                <div class="page-actions">
+                    <button class="btn btn-outline" id="refreshBtn" title="Atualizar dados">
+                        <i data-lucide="refresh-cw"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Filtros de Período -->
-            <div class="period-filters">
-                <button class="btn-filter active" data-periodo="semana" title="Serviços desta semana">
-                    <i data-lucide="calendar"></i> Esta Semana
-                </button>
-                <button class="btn-filter" data-periodo="mes" title="Serviços deste mês">
-                    <i data-lucide="calendar"></i> Este Mês
-                </button>
-                <button class="btn-filter" data-periodo="todos" title="Todos os serviços">
-                    <i data-lucide="calendar"></i> Todos
-                </button>
-                <button class="btn-filter" id="refreshEconomiaBtn" title="Atualizar dados">
-                    <i data-lucide="refresh-cw"></i> Atualizar
-                </button>
+            <!-- Filtro de Período -->
+            <div class="period-filter">
+                <button class="filter-btn active" data-periodo="todos">Todo período</button>
+                <button class="filter-btn" data-periodo="semana">Esta semana</button>
+                <button class="filter-btn" data-periodo="mes">Este mês</button>
             </div>
+
+            <!-- Cards de Resumo - 2 em cima, 2 no meio, 2 em baixo -->
+            <section class="cards-grid">
+                <!-- Linha 1 -->
+                <div class="card-summary">
+                    <div class="card-icon green">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">Recebido</span>
+                        <span class="card-value" id="totalRecebido">R$ 0,00</span>
+                    </div>
+                </div>
+                <div class="card-summary">
+                    <div class="card-icon orange">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">A Receber</span>
+                        <span class="card-value" id="totalAReceber">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <!-- Linha 2 -->
+                <div class="card-summary">
+                    <div class="card-icon blue">
+                        <i data-lucide="briefcase"></i>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">Serviços Pagos</span>
+                        <span class="card-value" id="servicosPagos">0</span>
+                    </div>
+                </div>
+                <div class="card-summary">
+                    <div class="card-icon purple">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">Clientes Inadimplentes</span>
+                        <span class="card-value" id="clientesInadimplentes">0</span>
+                    </div>
+                </div>
+
+                <!-- Linha 3 -->
+                <div class="card-summary">
+                    <div class="card-icon teal">
+                        <i data-lucide="calculator"></i>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">Ticket Médio</span>
+                        <span class="card-value" id="ticketMedio">R$ 0,00</span>
+                    </div>
+                </div>
+                <div class="card-summary">
+                    <div class="card-icon pink">
+                        <i data-lucide="alert-circle"></i>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">Em Atraso</span>
+                        <span class="card-value" id="emAtraso">0</span>
+                    </div>
+                </div>
+            </section>
 
             <!-- Gráficos -->
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <h3>
-                        <i data-lucide="trending-up"></i>
-                        Evolução Financeira
-                        <span style="font-size: 12px; font-weight: 400; color: var(--gray-400); margin-left: auto;">
-                            Recebido vs A Receber
-                        </span>
-                    </h3>
+            <section class="charts-section">
+                <div class="chart-container main-chart">
+                    <div class="chart-header">
+                        <div>
+                            <h3><i data-lucide="trending-up"></i> Evolução Financeira</h3>
+                            <span class="chart-subtitle">Recebidos vs Pendentes ao longo do tempo</span>
+                        </div>
+                    </div>
                     <canvas id="evolutionChart"></canvas>
                 </div>
-                <div class="chart-container">
-                    <h3>
-                        <i data-lucide="pie-chart"></i>
-                        Recebido vs A Receber
-                        <span style="font-size: 12px; font-weight: 400; color: var(--gray-400); margin-left: auto;">
-                            Proporção
-                        </span>
-                    </h3>
-                    <canvas id="comparisonChart"></canvas>
-                </div>
-            </div>
 
-            <!-- Clientes com Pendências -->
-            <div class="debtors-section">
-                <div class="section-header">
-                    <h3>
-                        <i data-lucide="users"></i>
-                        Clientes com Pagamentos Pendentes
+                <!-- Gráficos Secundários em Coluna -->
+                <div class="charts-secondary">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <div>
+                                <h3><i data-lucide="pie-chart"></i> Distribuição</h3>
+                                <span class="chart-subtitle">Proporção entre recebido e pendente</span>
+                            </div>
+                        </div>
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <div>
+                                <h3><i data-lucide="bar-chart-2"></i> Resumo Rápido</h3>
+                                <span class="chart-subtitle">Métricas em destaque</span>
+                            </div>
+                        </div>
+                        <div class="quick-stats">
+                            <div class="quick-stat green">
+                                <span class="qs-label">Recebido</span>
+                                <span class="qs-value" id="qsRecebido">R$ 0,00</span>
+                            </div>
+                            <div class="quick-stat orange">
+                                <span class="qs-label">A Receber</span>
+                                <span class="qs-value" id="qsAReceber">R$ 0,00</span>
+                            </div>
+                            <div class="quick-stat blue">
+                                <span class="qs-label">Total</span>
+                                <span class="qs-value" id="qsTotal">R$ 0,00</span>
+                            </div>
+                            <div class="quick-stat purple">
+                                <span class="qs-label">% Recebido</span>
+                                <span class="qs-value" id="qsPercentual">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Listas em Coluna (empilhadas) -->
+            <div class="lists-column">
+                <!-- Clientes com Maior Valor em Aberto -->
+                <section class="list-section">
+                    <div class="list-header">
+                        <h3><i data-lucide="users"></i> Clientes com Maior Valor em Aberto</h3>
                         <span class="badge-count" id="debtorsCount">0</span>
-                    </h3>
-                    <span class="subtitle">
-                        <i data-lucide="info"></i>
-                        Clique no nome para ver os serviços
-                    </span>
-                </div>
-                <div id="debtorsTableContainer">
-                    <table class="debtors-table">
-                        <thead>
-                            <tr>
-                                <th>Cliente</th>
-                                <th>Valor Devido</th>
-                                <th>Serviços Pendentes</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="debtorsBody">
-                            <tr class="empty-row">
-                                <td colspan="4">
-                                    <span style="font-size: 18px;">🔄</span><br>
-                                    Carregando dados...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    </div>
+                    <div class="list-container" id="debtorsList">
+                        <div class="empty-state">
+                            <i data-lucide="inbox"></i>
+                            <p>Nenhum cliente com pendência</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Últimos Recebimentos -->
+                <section class="list-section">
+                    <div class="list-header">
+                        <h3><i data-lucide="credit-card"></i> Últimos Recebimentos</h3>
+                        <span class="badge-count" id="recebimentosCount">0</span>
+                    </div>
+                    <div class="list-container" id="ultimosRecebimentos">
+                        <div class="empty-state">
+                            <i data-lucide="inbox"></i>
+                            <p>Nenhum recebimento registrado</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Serviços Pendentes de Pagamento -->
+                <section class="list-section">
+                    <div class="list-header">
+                        <h3><i data-lucide="alert-triangle"></i> Serviços Pendentes de Pagamento</h3>
+                        <span class="badge-count warning" id="pendentesCount">0</span>
+                    </div>
+                    <div class="list-container" id="servicosPendentes">
+                        <div class="empty-state">
+                            <i data-lucide="check-circle"></i>
+                            <p>Todos os serviços estão pagos!</p>
+                        </div>
+                    </div>
+                </section>
             </div>
-        </div>
+        </main>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
@@ -232,10 +234,7 @@
     <div class="modal" id="clienteDetalheModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h2 id="detalheModalTitle">
-                    <i data-lucide="user" style="width: 24px; height: 24px; color: var(--primary);"></i>
-                    Serviços Pendentes
-                </h2>
+                <h2 id="detalheModalTitle">Serviços Pendentes</h2>
                 <button class="modal-close" id="closeDetalheModal">
                     <i data-lucide="x"></i>
                 </button>
@@ -245,31 +244,21 @@
                     <div class="cliente-avatar" id="detalheAvatar">E</div>
                     <div class="cliente-info">
                         <h3 id="detalheClienteNome">Cliente</h3>
-                        <p id="detalheClienteInfo">
-                            <i data-lucide="credit-card" style="width: 14px; height: 14px; color: #f44336;"></i>
-                            Total devido: <strong id="detalheTotalDevido" style="color: #f44336;">R$ 0,00</strong>
-                        </p>
+                        <p id="detalheClienteInfo">Total devido: <strong id="detalheTotalDevido">R$ 0,00</strong></p>
                     </div>
                 </div>
                 <div id="detalheServicosList" class="servicos-pendentes-list">
                     <div style="text-align: center; color: var(--gray-400); padding: 30px;">
-                        <span style="font-size: 24px;">🔄</span><br>
                         Carregando serviços...
                     </div>
                 </div>
                 <div class="total-pendente">
-                    <span class="label">
-                        <i data-lucide="alert-circle" style="width: 18px; height: 18px;"></i>
-                        Total Pendente:
-                    </span>
+                    <span class="label">Total Pendente:</span>
                     <span class="valor" id="detalheTotalPendente">R$ 0,00</span>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="closeDetalheModalBtn">
-                    <i data-lucide="x"></i>
-                    Fechar
-                </button>
+                <button class="btn btn-secondary" id="closeDetalheModalBtn">Fechar</button>
             </div>
         </div>
     </div>
@@ -281,65 +270,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="module">
-        import { AuthService } from './modules/auth.js';
-        import { EconomiaManager } from './modules/economia.js';
-
-        // ============================================
-        // TOAST
-        // ============================================
-        window.showToast = function(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-
-            if (!toast || !toastMessage) {
-                console.log(`[${type}] ${message}`);
-                return;
-            }
-
-            const icon = toast.querySelector('i');
-            toast.className = '';
-
-            const icons = {
-                success: 'check-circle',
-                error: 'x-circle',
-                warning: 'alert-triangle',
-                info: 'info'
-            };
-
-            if (icon) {
-                icon.setAttribute('data-lucide', icons[type] || 'info');
-            }
-
-            toast.classList.add(type);
-            toastMessage.textContent = message;
-            toast.classList.add('show');
-
-            if (window.lucide) lucide.createIcons();
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        };
-
-        // ============================================
-        // INICIALIZAÇÃO
-        // ============================================
-        console.log('🚀 Inicializando Economia...');
-
-        const user = await AuthService.checkAuth();
-        if (user) {
-            document.getElementById('userName').textContent = user.nome || 'Usuário';
-            document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
-        }
-
-        if (window.lucide) lucide.createIcons();
-
-        const manager = new EconomiaManager();
-        window.economiaManager = manager;
-
-        console.log('✅ Economia inicializado!');
-    </script>
+    <script src="modules/economia.js" type="module"></script>
 </body>
-
 </html>
