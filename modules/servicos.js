@@ -1,5 +1,115 @@
-// modules/servicos.js
+// assets/js/servicos.js
 import supabase from '../services/supabase.js';
+
+// ============================================
+// FUNÇÕES AUXILIARES GLOBAIS
+// ============================================
+
+// Toast
+window.showToast = function(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+
+    if (!toast || !toastMessage) {
+        console.log(`[${type}] ${message}`);
+        return;
+    }
+
+    const icon = toast.querySelector('i');
+    toast.className = '';
+
+    const icons = {
+        success: 'check-circle',
+        error: 'x-circle',
+        warning: 'alert-triangle',
+        info: 'info'
+    };
+
+    if (icon) {
+        icon.setAttribute('data-lucide', icons[type] || 'info');
+    }
+
+    toast.classList.add(type);
+    toastMessage.textContent = message;
+    toast.classList.add('show');
+
+    if (window.lucide) lucide.createIcons();
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+};
+
+// Confirm
+window.showConfirm = function(message, callback) {
+    document.getElementById('confirmMessage').textContent = message;
+    window.confirmCallback = callback;
+    document.getElementById('confirmModal').style.display = 'flex';
+    if (window.lucide) lucide.createIcons();
+};
+
+// Fechar confirm
+document.getElementById('closeConfirmModal')?.addEventListener('click', () => {
+    document.getElementById('confirmModal').style.display = 'none';
+});
+
+document.getElementById('confirmCancelBtn')?.addEventListener('click', () => {
+    document.getElementById('confirmModal').style.display = 'none';
+});
+
+document.getElementById('confirmActionBtn')?.addEventListener('click', () => {
+    if (window.confirmCallback) {
+        window.confirmCallback();
+        window.confirmCallback = null;
+    }
+    document.getElementById('confirmModal').style.display = 'none';
+});
+
+// ============================================
+// FUNÇÕES AUXILIARES
+// ============================================
+
+function formatCurrency(value) {
+    let cleaned = value.replace(/\D/g, '');
+    if (cleaned === '') return '';
+    let number = parseInt(cleaned) / 100;
+    return number.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function parseCurrency(value) {
+    if (!value) return null;
+    let cleaned = value.replace(/[^\d,]/g, '').replace(',', '.');
+    let number = parseFloat(cleaned);
+    return isNaN(number) ? null : number;
+}
+
+function validateCliente(value) {
+    return { isValid: value !== '' };
+}
+
+function validateNome(value) {
+    return { isValid: value.trim().length > 0 };
+}
+
+function validateData(value) {
+    return { isValid: value !== '' };
+}
+
+function normalizeString(str) {
+    if (!str) return '';
+    return str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+}
+
+// ============================================
+// SERVIÇOS MANAGER
+// ============================================
 
 export class ServicosManager {
     constructor() {
@@ -8,7 +118,9 @@ export class ServicosManager {
         this.filters = {
             status: 'todos',
             cliente: '',
-            periodo: 'todos'
+            tipoCliente: '',
+            periodo: 'todos',
+            search: ''
         };
         this.init();
     }
@@ -17,19 +129,21 @@ export class ServicosManager {
         console.log('🚀 Inicializando ServicosManager...');
         await this.loadClientes();
         await this.loadServicos();
-        this.setupEventListeners();
-        this.setupPaymentToggle();
+        this.setupEvents();
         this.setupRealtimeValidation();
+        this.setupPaymentToggle();
+        this.setupSearchAndFilters();
         this.checkUrlForServicoId();
     }
 
     // ============================================
     // VERIFICAR ID NA URL
     // ============================================
+
     checkUrlForServicoId() {
         const urlParams = new URLSearchParams(window.location.search);
         const servicoId = urlParams.get('id');
-        
+
         if (servicoId) {
             console.log(`📋 ID do serviço encontrado na URL: ${servicoId}`);
             this.openServicoById(servicoId);
@@ -40,36 +154,36 @@ export class ServicosManager {
         try {
             let tentativas = 0;
             const maxTentativas = 20;
-            
+
             while (this.servicos.length === 0 && tentativas < maxTentativas) {
                 await new Promise(resolve => setTimeout(resolve, 100));
                 tentativas++;
             }
 
             let servico = this.servicos.find(s => s.id === servicoId);
-            
+
             if (!servico) {
                 console.log('🔍 Serviço não encontrado na lista, buscando no banco...');
                 const { data, error } = await supabase
                     .from('servicos')
                     .select(`
                         *,
-                        clientes:cliente_id(nome)
+                        clientes:cliente_id(id, nome, tipo)
                     `)
                     .eq('id', servicoId)
                     .single();
 
                 if (error) {
                     console.error('❌ Erro ao buscar serviço:', error);
-                    this.showNotification('Serviço não encontrado!', 'error');
+                    window.showToast('Serviço não encontrado!', 'error');
                     return;
                 }
 
                 servico = data;
-                
+
                 if (servico && !this.servicos.some(s => s.id === servico.id)) {
                     this.servicos.unshift(servico);
-                    this.renderServicos();
+                    this.render();
                     this.updateStats();
                 }
             }
@@ -80,23 +194,24 @@ export class ServicosManager {
                     this.openModal(servico);
                 }, 300);
             } else {
-                this.showNotification('Serviço não encontrado!', 'error');
+                window.showToast('Serviço não encontrado!', 'error');
             }
         } catch (error) {
             console.error('❌ Erro ao abrir serviço por ID:', error);
-            this.showNotification('Erro ao carregar serviço!', 'error');
+            window.showToast('Erro ao carregar serviço!', 'error');
         }
     }
 
     // ============================================
     // CARREGAMENTO DE CLIENTES
     // ============================================
+
     async loadClientes() {
         try {
             console.log('📥 Carregando clientes...');
             const { data, error } = await supabase
                 .from('clientes')
-                .select('id, nome')
+                .select('id, nome, tipo')
                 .order('nome');
 
             if (error) throw error;
@@ -106,7 +221,7 @@ export class ServicosManager {
             this.populateClienteSelects();
         } catch (error) {
             console.error('❌ Erro ao carregar clientes:', error);
-            this.showNotification('Erro ao carregar clientes!', 'error');
+            window.showToast('Erro ao carregar clientes!', 'error');
         }
     }
 
@@ -119,7 +234,7 @@ export class ServicosManager {
             const currentValue = select.value;
             select.innerHTML = `
                 <option value="">${id === 'filtroCliente' ? 'Todos' : 'Selecione um cliente...'}</option>
-                ${this.clientes.map(c => 
+                ${this.clientes.map(c =>
                     `<option value="${c.id}">${c.nome}</option>`
                 ).join('')}
             `;
@@ -128,28 +243,77 @@ export class ServicosManager {
     }
 
     // ============================================
+    // SETUP SEARCH AND FILTERS
+    // ============================================
+
+    setupSearchAndFilters() {
+        const searchInput = document.getElementById('searchServicos');
+        const clearBtn = document.getElementById('clearSearchBtn');
+
+        // Busca em tempo real
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.filters.search = e.target.value;
+                clearBtn?.classList.toggle('visible', e.target.value.length > 0);
+                this.loadServicos();
+            });
+
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.loadServicos();
+                }
+            });
+        }
+
+        // Limpar busca
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                this.filters.search = '';
+                clearBtn.classList.remove('visible');
+                this.loadServicos();
+                searchInput.focus();
+            });
+        }
+
+        // Filtro por tipo de cliente
+        const tipoClienteFilter = document.getElementById('filtroTipoCliente');
+        if (tipoClienteFilter) {
+            tipoClienteFilter.addEventListener('change', (e) => {
+                this.filters.tipoCliente = e.target.value;
+                this.loadServicos();
+            });
+        }
+    }
+
+    // ============================================
     // CARREGAMENTO DE SERVIÇOS
     // ============================================
+
     async loadServicos() {
         try {
             console.log('📥 Carregando serviços...', this.filters);
-            
+
             let query = supabase
                 .from('servicos')
                 .select(`
                     *,
-                    clientes:cliente_id(nome)
+                    clientes:cliente_id(id, nome, tipo)
                 `)
                 .order('data', { ascending: false });
 
+            // Filtro por status
             if (this.filters.status && this.filters.status !== 'todos') {
                 query = query.eq('status', this.filters.status);
             }
 
+            // Filtro por cliente
             if (this.filters.cliente) {
                 query = query.eq('cliente_id', this.filters.cliente);
             }
 
+            // Filtro por período
             if (this.filters.periodo === 'hoje') {
                 const hoje = new Date().toISOString().split('T')[0];
                 query = query.eq('data', hoje);
@@ -164,20 +328,37 @@ export class ServicosManager {
             }
 
             const { data, error } = await query;
-            
+
             if (error) throw error;
 
-            this.servicos = data || [];
+            let servicos = data || [];
+
+            // Filtro por tipo de cliente (client-side)
+            if (this.filters.tipoCliente) {
+                servicos = servicos.filter(s => s.clientes?.tipo === this.filters.tipoCliente);
+            }
+
+            // Filtro por busca (client-side)
+            if (this.filters.search && this.filters.search.trim() !== '') {
+                const searchTerm = normalizeString(this.filters.search);
+                servicos = servicos.filter(s => {
+                    const servicoNome = normalizeString(s.servico);
+                    const clienteNome = normalizeString(s.clientes?.nome || '');
+                    return servicoNome.includes(searchTerm) || clienteNome.includes(searchTerm);
+                });
+            }
+
+            this.servicos = servicos;
             console.log(`✅ ${this.servicos.length} serviços carregados`);
-            this.renderServicos();
+            this.render();
             this.updateStats();
 
             this.checkUrlForServicoId();
 
         } catch (error) {
             console.error('❌ Erro ao carregar serviços:', error);
-            this.showNotification('Erro ao carregar serviços!', 'error');
-            
+            window.showToast('Erro ao carregar serviços!', 'error');
+
             const container = document.getElementById('servicosList');
             if (container) {
                 container.innerHTML = `
@@ -197,9 +378,10 @@ export class ServicosManager {
     }
 
     // ============================================
-    // RENDERIZAÇÃO DOS SERVIÇOS
+    // RENDERIZAÇÃO
     // ============================================
-    renderServicos() {
+
+    render() {
         const container = document.getElementById('servicosList');
         if (!container) {
             console.warn('⚠️ Container servicosList não encontrado');
@@ -207,23 +389,43 @@ export class ServicosManager {
         }
 
         if (this.servicos.length === 0) {
+            const hasFilters = this.filters.search ||
+                this.filters.status !== 'todos' ||
+                this.filters.cliente ||
+                this.filters.tipoCliente ||
+                this.filters.periodo !== 'todos';
+
             container.innerHTML = `
                 <div class="empty-state">
                     <i data-lucide="briefcase" class="empty-icon"></i>
-                    <h3>Nenhum serviço encontrado</h3>
-                    <p style="color: var(--gray-500);">Clique em "Novo Serviço" para começar</p>
-                    <button class="btn btn-primary" id="emptyNovoServicoBtn" style="margin-top: 16px;">
-                        <i data-lucide="plus"></i>
-                        Novo Serviço
-                    </button>
+                    <h3>${hasFilters ? 'Nenhum serviço encontrado com os filtros selecionados' : 'Nenhum serviço cadastrado ainda'}</h3>
+                    <p style="color: var(--gray-500);">
+                        ${hasFilters ? 'Tente ajustar os filtros ou a busca' : 'Clique em "Novo Serviço" para começar'}
+                    </p>
+                    ${!hasFilters ? `
+                        <button class="btn btn-primary" id="emptyNovoServicoBtn" style="margin-top: 16px;">
+                            <i data-lucide="plus"></i>
+                            Novo Serviço
+                        </button>
+                    ` : `
+                        <button class="btn btn-outline" id="clearFiltersFromEmpty" style="margin-top: 16px;">
+                            <i data-lucide="x"></i>
+                            Limpar filtros
+                        </button>
+                    `}
                 </div>
             `;
-            
+
             if (window.lucide) lucide.createIcons();
-            
+
             document.getElementById('emptyNovoServicoBtn')?.addEventListener('click', () => {
                 this.openModal();
             });
+
+            document.getElementById('clearFiltersFromEmpty')?.addEventListener('click', () => {
+                this.clearAllFilters();
+            });
+
             return;
         }
 
@@ -236,7 +438,7 @@ export class ServicosManager {
         container.innerHTML = this.servicos.map(servico => {
             const isPago = servico.pago === true;
             const pagoStatus = isPago ? 'pago' : 'nao-pago';
-            
+
             return `
             <div class="servico-card" data-id="${servico.id}">
                 <div class="card-header">
@@ -266,7 +468,7 @@ export class ServicosManager {
                             Pagamento: <strong>${isPago ? '✅ Recebido' : '⏳ Pendente'}</strong>
                         </span>
                         <label class="switch">
-                            <input type="checkbox" class="toggle-pagamento" data-id="${servico.id}" 
+                            <input type="checkbox" class="toggle-pagamento" data-id="${servico.id}"
                                    ${isPago ? 'checked' : ''}>
                             <span class="slider ${isPago ? 'pago' : ''}"></span>
                         </label>
@@ -293,6 +495,7 @@ export class ServicosManager {
 
         if (window.lucide) lucide.createIcons();
 
+        // Event listeners
         container.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -314,13 +517,9 @@ export class ServicosManager {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = btn.dataset.id;
-                if (window.showConfirm) {
-                    window.showConfirm('Excluir este serviço?', () => {
-                        this.deleteServico(id);
-                    });
-                } else {
+                window.showConfirm('Excluir este serviço?', () => {
                     this.deleteServico(id);
-                }
+                });
             });
         });
 
@@ -335,12 +534,60 @@ export class ServicosManager {
     }
 
     // ============================================
-    // TOGGLE DE PAGAMENTO
+    // LIMPAR FILTROS
     // ============================================
+
+    clearAllFilters() {
+        document.getElementById('filtroStatus').value = 'todos';
+        document.getElementById('filtroCliente').value = '';
+        document.getElementById('filtroTipoCliente').value = '';
+        document.getElementById('filtroPeriodo').value = 'todos';
+        document.getElementById('searchServicos').value = '';
+        document.getElementById('clearSearchBtn')?.classList.remove('visible');
+
+        this.filters.status = 'todos';
+        this.filters.cliente = '';
+        this.filters.tipoCliente = '';
+        this.filters.periodo = 'todos';
+        this.filters.search = '';
+
+        this.loadServicos();
+    }
+
+    // ============================================
+    // ESTATÍSTICAS
+    // ============================================
+
+    updateStats() {
+        const total = this.servicos.length;
+        const concluidos = this.servicos.filter(s => s.status === 'concluido').length;
+        const pendentes = this.servicos.filter(s => s.status === 'pendente').length;
+        const valorTotal = this.servicos.reduce((sum, s) => sum + (s.valor || 0), 0);
+
+        const valorRecebido = this.servicos
+            .filter(s => s.status === 'concluido' && s.pago === true)
+            .reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
+
+        const valorAReceber = this.servicos
+            .filter(s => s.status === 'concluido' && s.pago !== true)
+            .reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
+
+        document.getElementById('totalServicos').textContent = total;
+        document.getElementById('servicosConcluidos').textContent = concluidos;
+        document.getElementById('servicosPendentes').textContent = pendentes;
+        document.getElementById('valorTotalServicos').textContent = `R$ ${valorTotal.toFixed(2)}`;
+        document.getElementById('valorRecebido').textContent = `R$ ${valorRecebido.toFixed(2)}`;
+        document.getElementById('valorAReceber').textContent = `R$ ${valorAReceber.toFixed(2)}`;
+    }
+
+    // ============================================
+    // TOGGLE PAGAMENTO
+    // ============================================
+
     async togglePagamento(id, pago) {
         try {
             console.log(`💰 Alterando pagamento do serviço ${id} para ${pago ? 'PAGO' : 'NÃO PAGO'}`);
-            
+
             const { error } = await supabase
                 .from('servicos')
                 .update({ pago: pago })
@@ -348,11 +595,11 @@ export class ServicosManager {
 
             if (error) throw error;
 
-            this.showNotification(pago ? '✅ Pagamento registrado como recebido!' : '⏳ Pagamento marcado como pendente', 'success');
+            window.showToast(pago ? '✅ Pagamento registrado como recebido!' : '⏳ Pagamento marcado como pendente', 'success');
             await this.loadServicos();
         } catch (error) {
             console.error('❌ Erro ao atualizar pagamento:', error);
-            this.showNotification('Erro ao atualizar pagamento: ' + error.message, 'error');
+            window.showToast('Erro ao atualizar pagamento: ' + error.message, 'error');
         }
     }
 
@@ -387,6 +634,7 @@ export class ServicosManager {
     // ============================================
     // VALIDAÇÃO EM TEMPO REAL
     // ============================================
+
     setupRealtimeValidation() {
         const nomeInput = document.getElementById('servicoNome');
         const nomeCounter = document.getElementById('nomeCounter');
@@ -398,7 +646,7 @@ export class ServicosManager {
             nomeInput.addEventListener('input', () => {
                 const length = nomeInput.value.length;
                 if (nomeCounter) nomeCounter.textContent = `${length}/100`;
-                
+
                 if (length > 90 && nomeCounter) {
                     nomeCounter.className = 'char-counter limit';
                 } else if (nomeCounter) {
@@ -471,7 +719,8 @@ export class ServicosManager {
 
         if (clienteSelect) {
             clienteSelect.addEventListener('change', () => {
-                if (clienteSelect.value) {
+                const validation = validateCliente(clienteSelect.value);
+                if (validation.isValid) {
                     clienteSelect.className = 'valid';
                     if (clienteStatus) {
                         clienteStatus.textContent = '✅';
@@ -504,7 +753,7 @@ export class ServicosManager {
             valorInput.addEventListener('input', () => {
                 const rawValue = valorInput.value;
                 const numbers = rawValue.replace(/\D/g, '');
-                
+
                 if (numbers === '') {
                     valorInput.value = '';
                     if (valorHint) {
@@ -514,10 +763,10 @@ export class ServicosManager {
                     return;
                 }
 
-                const formatted = this.formatCurrency(numbers);
+                const formatted = formatCurrency(numbers);
                 valorInput.value = formatted;
 
-                const parsed = this.parseCurrency(formatted);
+                const parsed = parseCurrency(formatted);
                 if (parsed !== null && parsed > 0) {
                     valorInput.className = 'valid';
                     if (valorHint) {
@@ -552,53 +801,9 @@ export class ServicosManager {
     }
 
     // ============================================
-    // FUNÇÕES AUXILIARES DE FORMATAÇÃO
+    // CRUD
     // ============================================
-    formatCurrency(value) {
-        let cleaned = value.replace(/\D/g, '');
-        if (cleaned === '') return '';
-        let number = parseInt(cleaned) / 100;
-        return number.toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
 
-    parseCurrency(value) {
-        if (!value) return null;
-        let cleaned = value.replace(/[^\d,]/g, '').replace(',', '.');
-        let number = parseFloat(cleaned);
-        return isNaN(number) ? null : number;
-    }
-
-    // ============================================
-    // ATUALIZAÇÃO DE ESTATÍSTICAS
-    // ============================================
-    updateStats() {
-        const total = this.servicos.length;
-        const concluidos = this.servicos.filter(s => s.status === 'concluido').length;
-        const pendentes = this.servicos.filter(s => s.status === 'pendente').length;
-        const valorTotal = this.servicos.reduce((sum, s) => sum + (s.valor || 0), 0);
-        
-        const valorRecebido = this.servicos
-            .filter(s => s.status === 'concluido' && s.pago === true)
-            .reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
-        
-        const valorAReceber = this.servicos
-            .filter(s => s.status === 'concluido' && s.pago !== true)
-            .reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
-
-        document.getElementById('totalServicos').textContent = total;
-        document.getElementById('servicosConcluidos').textContent = concluidos;
-        document.getElementById('servicosPendentes').textContent = pendentes;
-        document.getElementById('valorTotalServicos').textContent = `R$ ${valorTotal.toFixed(2)}`;
-        document.getElementById('valorRecebido').textContent = `R$ ${valorRecebido.toFixed(2)}`;
-        document.getElementById('valorAReceber').textContent = `R$ ${valorAReceber.toFixed(2)}`;
-    }
-
-    // ============================================
-    // CRUD - CREATE, UPDATE, DELETE
-    // ============================================
     async createServico(data) {
         try {
             console.log('📝 Criando serviço:', data);
@@ -608,12 +813,12 @@ export class ServicosManager {
 
             if (error) throw error;
 
-            this.showNotification('Serviço criado com sucesso! 🎉', 'success');
+            window.showToast('Serviço criado com sucesso! 🎉', 'success');
             await this.loadServicos();
             this.closeModal();
         } catch (error) {
             console.error('❌ Erro ao criar serviço:', error);
-            this.showNotification('Erro ao criar serviço: ' + error.message, 'error');
+            window.showToast('Erro ao criar serviço: ' + error.message, 'error');
         }
     }
 
@@ -627,19 +832,19 @@ export class ServicosManager {
 
             if (error) throw error;
 
-            this.showNotification('Serviço atualizado com sucesso! ✅', 'success');
+            window.showToast('Serviço atualizado com sucesso! ✅', 'success');
             await this.loadServicos();
             this.closeModal();
         } catch (error) {
             console.error('❌ Erro ao atualizar serviço:', error);
-            this.showNotification('Erro ao atualizar serviço: ' + error.message, 'error');
+            window.showToast('Erro ao atualizar serviço: ' + error.message, 'error');
         }
     }
 
     async deleteServico(id) {
         try {
             console.log('🗑️ Excluindo serviço:', id);
-            
+
             const { data: notas, error: notasError } = await supabase
                 .from('notas')
                 .select('id')
@@ -649,7 +854,7 @@ export class ServicosManager {
             if (notasError) throw notasError;
 
             if (notas && notas.length > 0) {
-                this.showNotification('Este serviço possui notas associadas. Exclua as notas primeiro.', 'warning');
+                window.showToast('Este serviço possui notas associadas. Exclua as notas primeiro.', 'warning');
                 return;
             }
 
@@ -660,21 +865,18 @@ export class ServicosManager {
 
             if (error) throw error;
 
-            this.showNotification('Serviço excluído com sucesso! 🗑️', 'success');
+            window.showToast('Serviço excluído com sucesso! 🗑️', 'success');
             await this.loadServicos();
         } catch (error) {
             console.error('❌ Erro ao excluir serviço:', error);
-            this.showNotification('Erro ao excluir serviço: ' + error.message, 'error');
+            window.showToast('Erro ao excluir serviço: ' + error.message, 'error');
         }
     }
 
-    // ============================================
-    // COMPLETAR SERVIÇO
-    // ============================================
     async completeServico(id) {
         try {
             console.log('✅ Concluindo serviço:', id);
-            
+
             const { data: servico, error: findError } = await supabase
                 .from('servicos')
                 .select('*')
@@ -684,13 +886,13 @@ export class ServicosManager {
             if (findError) throw findError;
 
             if (servico.status === 'concluido') {
-                this.showNotification('Este serviço já está concluído!', 'warning');
+                window.showToast('Este serviço já está concluído!', 'warning');
                 return;
             }
 
             const { error } = await supabase
                 .from('servicos')
-                .update({ 
+                .update({
                     status: 'concluido',
                     pago: false
                 })
@@ -698,17 +900,18 @@ export class ServicosManager {
 
             if (error) throw error;
 
-            this.showNotification('Serviço concluído com sucesso! ✅', 'success');
+            window.showToast('Serviço concluído com sucesso! ✅', 'success');
             await this.loadServicos();
         } catch (error) {
             console.error('❌ Erro ao concluir serviço:', error);
-            this.showNotification('Erro ao concluir serviço: ' + error.message, 'error');
+            window.showToast('Erro ao concluir serviço: ' + error.message, 'error');
         }
     }
 
     // ============================================
-    // MODAL - ABRIR E FECHAR
+    // MODAL
     // ============================================
+
     openModal(data = null) {
         const modal = document.getElementById('servicoModal');
         if (!modal) return;
@@ -832,6 +1035,7 @@ export class ServicosManager {
     // ============================================
     // SALVAR SERVIÇO
     // ============================================
+
     async saveServico() {
         const id = document.getElementById('servicoId').value;
         const clienteId = document.getElementById('servicoCliente').value;
@@ -839,24 +1043,24 @@ export class ServicosManager {
         const descricao = document.getElementById('servicoDescricao').value.trim();
         const data = document.getElementById('servicoData').value;
         const valorRaw = document.getElementById('servicoValor').value;
-        const valor = this.parseCurrency(valorRaw);
+        const valor = parseCurrency(valorRaw);
         const status = document.getElementById('servicoStatus').value;
         const pago = document.getElementById('servicoPago')?.checked || false;
 
         if (!clienteId) {
-            this.showNotification('Selecione um cliente!', 'error');
+            window.showToast('Selecione um cliente!', 'error');
             document.getElementById('servicoCliente').focus();
             return;
         }
 
         if (!nome) {
-            this.showNotification('Informe o nome do serviço!', 'error');
+            window.showToast('Informe o nome do serviço!', 'error');
             document.getElementById('servicoNome').focus();
             return;
         }
 
         if (!data) {
-            this.showNotification('Informe a data!', 'error');
+            window.showToast('Informe a data!', 'error');
             document.getElementById('servicoData').focus();
             return;
         }
@@ -893,6 +1097,7 @@ export class ServicosManager {
     // ============================================
     // DATAS
     // ============================================
+
     getStartOfWeek() {
         const now = new Date();
         const day = now.getDay();
@@ -912,13 +1117,98 @@ export class ServicosManager {
     }
 
     // ============================================
-    // EVENTOS E NOTIFICAÇÕES
+    // EVENTOS
     // ============================================
-    setupEventListeners() {
+
+    setupEvents() {
+        document.getElementById('novoServicoBtn')?.addEventListener('click', () => this.openModal());
+        document.getElementById('closeServicoModal')?.addEventListener('click', () => this.closeModal());
+        document.getElementById('closeServicoModalBtn')?.addEventListener('click', () => this.closeModal());
+
+        document.getElementById('saveServicoBtn')?.addEventListener('click', () => {
+            console.log('🖱️ Botão Salvar clicado!');
+            this.saveServico();
+        });
+
+        document.getElementById('refreshServicosBtn')?.addEventListener('click', () => this.loadServicos());
+
+        document.getElementById('limparFiltrosBtn')?.addEventListener('click', () => {
+            this.clearAllFilters();
+        });
+
+        document.getElementById('filtroStatus')?.addEventListener('change', (e) => {
+            this.filters.status = e.target.value;
+            this.loadServicos();
+        });
+
+        document.getElementById('filtroCliente')?.addEventListener('change', (e) => {
+            this.filters.cliente = e.target.value;
+            this.loadServicos();
+        });
+
+        document.getElementById('filtroPeriodo')?.addEventListener('change', (e) => {
+            this.filters.periodo = e.target.value;
+            this.loadServicos();
+        });
+
+        document.getElementById('servicoForm')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.saveServico();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            }
+        });
+
         console.log('✅ Event listeners configurados');
     }
+}
 
-    showNotification(message, type = 'info') {
-        console.log(`📢 ${type}: ${message}`);
+// ============================================
+// INICIALIZAÇÃO
+// ============================================
+
+console.log('🚀 Inicializando Serviços...');
+
+const initServicos = async () => {
+    try {
+        const { AuthService } = await import('./auth.js');
+
+        const user = await AuthService.checkAuth();
+        if (user) {
+            document.getElementById('userName').textContent = user.nome || 'Usuário';
+            document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
+        }
+
+        if (window.lucide) lucide.createIcons();
+
+        const manager = new ServicosManager();
+        window.servicosManager = manager;
+
+        // Verificar ID na URL após inicialização
+        const urlParams = new URLSearchParams(window.location.search);
+        const servicoId = urlParams.get('id');
+        if (servicoId) {
+            setTimeout(() => {
+                const servico = manager.servicos.find(s => s.id === servicoId);
+                if (servico) {
+                    manager.openModal(servico);
+                }
+            }, 500);
+        }
+
+        console.log('✅ Serviços inicializado!');
+    } catch (error) {
+        console.error('❌ Erro na inicialização:', error);
     }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initServicos);
+} else {
+    initServicos();
 }

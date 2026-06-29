@@ -5,9 +5,13 @@ export class EconomiaManager {
     constructor() {
         this.charts = {
             evolution: null,
-            comparison: null
+            comparison: null,
+            monthly: null
         };
         this.periodo = 'todos';
+        this.anoSelecionado = 'todos';
+        this.mesSelecionado = 'todos';
+        this.servicos = [];
         this.init();
     }
 
@@ -15,8 +19,93 @@ export class EconomiaManager {
         console.log('🚀 Inicializando EconomiaManager...');
         await this.loadData();
         this.setupEvents();
+        this.populateAnos();
+        this.setupPrecosModal();
     }
 
+    // ============================================
+    // POPULAR ANOS NO SELECT
+    // ============================================
+    populateAnos() {
+        const select = document.getElementById('anoSelector');
+        if (!select) return;
+
+        const anoAtual = new Date().getFullYear();
+        const anos = [];
+        for (let i = anoAtual; i >= anoAtual - 5; i--) {
+            anos.push(i);
+        }
+
+        // Preservar a opção "Todos"
+        const currentValue = select.value;
+        select.innerHTML = `<option value="todos">Todos</option>`;
+        anos.forEach(ano => {
+            select.innerHTML += `<option value="${ano}">${ano}</option>`;
+        });
+        if (currentValue) select.value = currentValue;
+    }
+
+    // ============================================
+    // TABELA DE PREÇOS
+    // ============================================
+    setupPrecosModal() {
+        const helpBtn = document.getElementById('helpBtn');
+        const modal = document.getElementById('precosModal');
+        const closeBtns = ['closePrecosModal', 'closePrecosModalBtn'];
+
+        // Dados da tabela
+        const servicos = [
+            { nome: 'Instalação de tomada', varejo: 85.00, atacado: 70.00 },
+            { nome: 'Instalação de ar-condicionado', varejo: 350.00, atacado: 280.00 },
+            { nome: 'Visita técnica', varejo: 120.00, atacado: 90.00 },
+            { nome: 'Mão de obra', varejo: 150.00, atacado: 120.00 },
+            { nome: 'Instalação de ventilador', varejo: 100.00, atacado: 80.00 },
+            { nome: 'Limpeza de ar-condicionado', varejo: 180.00, atacado: 140.00 },
+            { nome: 'Instalação de câmera', varejo: 200.00, atacado: 160.00 },
+            { nome: 'Instalação de torneira', varejo: 90.00, atacado: 70.00 },
+            { nome: 'Instalação de lâmpada', varejo: 55.00, atacado: 40.00 },
+            { nome: 'Refazer instalação elétrica', varejo: 450.00, atacado: 350.00 },
+            { nome: 'Troca de disjuntor', varejo: 75.00, atacado: 60.00 }
+        ];
+
+        helpBtn?.addEventListener('click', () => {
+            // Preencher tabela
+            const tbody = document.getElementById('precosTableBody');
+            if (tbody) {
+                tbody.innerHTML = servicos.map(s => `
+                    <tr>
+                        <td>${s.nome}</td>
+                        <td class="preco-varejo">R$ ${s.varejo.toFixed(2)}</td>
+                        <td class="preco-atacado">R$ ${s.atacado.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }
+            modal.style.display = 'flex';
+            if (window.lucide) lucide.createIcons();
+        });
+
+        closeBtns.forEach(id => {
+            document.getElementById(id)?.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        });
+
+        modal?.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal?.style.display === 'flex') {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    // ============================================
+    // CARREGAMENTO DE DADOS
+    // ============================================
     async loadData() {
         try {
             console.log('📥 Carregando dados financeiros...');
@@ -31,7 +120,12 @@ export class EconomiaManager {
 
             if (error) throw error;
 
-            const filtered = this.filterByPeriod(servicos || []);
+            this.servicos = servicos || [];
+
+            // Aplicar filtros de período (ano/mês)
+            const filtered = this.filterByPeriodAndDate(this.servicos);
+
+            // Calcular métricas
             const metrics = this.calculateMetrics(filtered);
 
             this.updateStats(metrics);
@@ -46,12 +140,19 @@ export class EconomiaManager {
         }
     }
 
-    filterByPeriod(servicos) {
+    // ============================================
+    // FILTRO POR PERÍODO E DATA
+    // ============================================
+    filterByPeriodAndDate(servicos) {
+        let filtered = [...servicos];
+
+        // Filtro rápido (semana/mês/todos)
         const now = new Date();
-        let startDate = new Date();
+        let startDate = null;
 
         switch (this.periodo) {
             case 'semana':
+                startDate = new Date(now);
                 startDate.setDate(now.getDate() - now.getDay());
                 startDate.setHours(0, 0, 0, 0);
                 break;
@@ -60,15 +161,41 @@ export class EconomiaManager {
                 break;
             case 'todos':
             default:
-                return servicos;
+                startDate = null;
+                break;
         }
 
-        return servicos.filter(s => {
-            const data = new Date(s.data);
-            return data >= startDate;
-        });
+        if (startDate) {
+            filtered = filtered.filter(s => {
+                const data = new Date(s.data);
+                return data >= startDate;
+            });
+        }
+
+        // Filtro por ano
+        if (this.anoSelecionado !== 'todos') {
+            const ano = parseInt(this.anoSelecionado);
+            filtered = filtered.filter(s => {
+                const data = new Date(s.data);
+                return data.getFullYear() === ano;
+            });
+        }
+
+        // Filtro por mês
+        if (this.mesSelecionado !== 'todos') {
+            const mes = parseInt(this.mesSelecionado) - 1;
+            filtered = filtered.filter(s => {
+                const data = new Date(s.data);
+                return data.getMonth() === mes;
+            });
+        }
+
+        return filtered;
     }
 
+    // ============================================
+    // CÁLCULO DE MÉTRICAS
+    // ============================================
     calculateMetrics(servicos) {
         const concluidos = servicos.filter(s => s.status === 'concluido');
         const recebidos = concluidos.filter(s => s.pago === true);
@@ -107,6 +234,9 @@ export class EconomiaManager {
         };
     }
 
+    // ============================================
+    // ATUALIZAR STATS
+    // ============================================
     updateStats(metrics) {
         document.getElementById('totalRecebido').textContent = `R$ ${metrics.totalRecebido.toFixed(2)}`;
         document.getElementById('totalAReceber').textContent = `R$ ${metrics.totalAReceber.toFixed(2)}`;
@@ -121,40 +251,48 @@ export class EconomiaManager {
         document.getElementById('qsPercentual').textContent = `${metrics.percentualRecebido.toFixed(1)}%`;
     }
 
+    // ============================================
+    // ATUALIZAR GRÁFICOS
+    // ============================================
     updateCharts(servicos) {
         const concluidos = servicos.filter(s => s.status === 'concluido');
+
+        // Gráfico de Evolução
         const grouped = this.groupByDate(concluidos);
         const labels = Object.keys(grouped).sort();
-
         const recebidoData = labels.map(d => grouped[d].recebido || 0);
         const aReceberData = labels.map(d => grouped[d].aReceber || 0);
 
         this.createEvolutionChart(labels, recebidoData, aReceberData);
 
+        // Gráfico de Distribuição (Doughnut)
         const totalRecebido = recebidoData.reduce((a, b) => a + b, 0);
         const totalAReceber = aReceberData.reduce((a, b) => a + b, 0);
         this.createComparisonChart(totalRecebido, totalAReceber);
+
+        // NOVO: Gráfico Mensal Comparativo
+        this.createMonthlyChart(concluidos);
     }
 
     groupByDate(servicos) {
         const grouped = {};
-
         servicos.forEach(s => {
             const data = s.data;
             if (!grouped[data]) {
                 grouped[data] = { recebido: 0, aReceber: 0 };
             }
-
             if (s.pago === true) {
                 grouped[data].recebido += (s.valor || 0);
             } else {
                 grouped[data].aReceber += (s.valor || 0);
             }
         });
-
         return grouped;
     }
 
+    // ============================================
+    // GRÁFICO DE EVOLUÇÃO (LINHA)
+    // ============================================
     createEvolutionChart(labels, recebidoData, aReceberData) {
         const ctx = document.getElementById('evolutionChart');
         if (!ctx) return;
@@ -175,7 +313,9 @@ export class EconomiaManager {
                             borderColor: '#4CAF50',
                             backgroundColor: 'rgba(76,175,80,0.1)',
                             fill: true,
-                            tension: 0.4
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#4CAF50'
                         },
                         {
                             label: 'A Receber',
@@ -183,18 +323,38 @@ export class EconomiaManager {
                             borderColor: '#F57C00',
                             backgroundColor: 'rgba(245,124,0,0.1)',
                             fill: true,
-                            tension: 0.4
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#F57C00'
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top' } },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { usePointStyle: true, padding: 20 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': R$ ' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: { callback: v => 'R$ ' + v.toFixed(2) }
+                            ticks: {
+                                callback: v => 'R$ ' + v.toFixed(2)
+                            }
                         }
                     }
                 }
@@ -216,38 +376,65 @@ export class EconomiaManager {
                         label: 'Recebido',
                         data: recebidoData,
                         borderColor: '#4CAF50',
-                        backgroundColor: 'rgba(76,175,80,0.1)',
+                        backgroundColor: 'rgba(76,175,80,0.12)',
                         fill: true,
                         tension: 0.4,
                         pointRadius: 4,
-                        pointBackgroundColor: '#4CAF50'
+                        pointBackgroundColor: '#4CAF50',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        borderWidth: 2.5
                     },
                     {
                         label: 'A Receber',
                         data: aReceberData,
                         borderColor: '#F57C00',
-                        backgroundColor: 'rgba(245,124,0,0.1)',
+                        backgroundColor: 'rgba(245,124,0,0.12)',
                         fill: true,
                         tension: 0.4,
                         pointRadius: 4,
-                        pointBackgroundColor: '#F57C00'
+                        pointBackgroundColor: '#F57C00',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        borderWidth: 2.5
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'top' } },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true, padding: 20 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': R$ ' + context.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { callback: v => 'R$ ' + v.toFixed(2) }
+                        ticks: {
+                            callback: v => 'R$ ' + v.toFixed(2)
+                        }
                     }
                 }
             }
         });
     }
 
+    // ============================================
+    // GRÁFICO DE DISTRIBUIÇÃO (DOUGHNUT)
+    // ============================================
     createComparisonChart(totalRecebido, totalAReceber) {
         const ctx = document.getElementById('comparisonChart');
         if (!ctx) return;
@@ -266,7 +453,8 @@ export class EconomiaManager {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { display: false } },
+                    cutout: '65%'
                 }
             });
             return;
@@ -279,8 +467,9 @@ export class EconomiaManager {
                 datasets: [{
                     data: [totalRecebido, totalAReceber],
                     backgroundColor: ['#4CAF50', '#F57C00'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
+                    borderWidth: 3,
+                    borderColor: '#fff',
+                    hoverOffset: 8
                 }]
             },
             options: {
@@ -289,14 +478,159 @@ export class EconomiaManager {
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { padding: 15, usePointStyle: true, pointStyle: 'circle' }
+                        labels: { padding: 16, usePointStyle: true, pointStyle: 'circle' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? (context.parsed / total * 100).toFixed(1) : 0;
+                                return context.label + ': R$ ' + context.parsed.toFixed(2) + ' (' + percentage + '%)';
+                            }
+                        }
                     }
                 },
-                cutout: '60%'
+                cutout: '62%'
             }
         });
     }
 
+    // ============================================
+    // NOVO: GRÁFICO COMPARATIVO MENSAL
+    // ============================================
+    createMonthlyChart(servicos) {
+        const ctx = document.getElementById('monthlyChart');
+        if (!ctx) return;
+
+        if (this.charts.monthly) {
+            this.charts.monthly.destroy();
+        }
+
+        // Agrupar por mês
+        const monthlyData = {};
+        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+        servicos.forEach(s => {
+            const data = new Date(s.data);
+            const key = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+            const label = `${monthNames[data.getMonth()]}/${data.getFullYear()}`;
+
+            if (!monthlyData[key]) {
+                monthlyData[key] = { label, recebido: 0, aReceber: 0 };
+            }
+
+            if (s.pago === true) {
+                monthlyData[key].recebido += (s.valor || 0);
+            } else {
+                monthlyData[key].aReceber += (s.valor || 0);
+            }
+        });
+
+        const sortedKeys = Object.keys(monthlyData).sort();
+        const labels = sortedKeys.map(k => monthlyData[k].label);
+        const recebidoData = sortedKeys.map(k => monthlyData[k].recebido);
+        const aReceberData = sortedKeys.map(k => monthlyData[k].aReceber);
+
+        // Atualizar legenda
+        const subtitle = document.getElementById('comparativoSubtitle');
+        if (subtitle) {
+            const totalMeses = labels.length;
+            subtitle.textContent = totalMeses > 0 ? `Faturamento por mês (${totalMeses} meses)` : 'Faturamento por mês';
+        }
+
+        if (labels.length === 0) {
+            this.charts.monthly = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sem dados'],
+                    datasets: [
+                        { label: 'Recebido', data: [0], backgroundColor: '#4CAF50', borderRadius: 4 },
+                        { label: 'A Receber', data: [0], backgroundColor: '#F57C00', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { usePointStyle: true, padding: 16 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => 'R$ ' + v.toFixed(2) }
+                        }
+                    }
+                }
+            });
+            return;
+        }
+
+        this.charts.monthly = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Recebido',
+                        data: recebidoData,
+                        backgroundColor: 'rgba(76, 175, 80, 0.75)',
+                        borderColor: '#4CAF50',
+                        borderWidth: 1.5,
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    },
+                    {
+                        label: 'A Receber',
+                        data: aReceberData,
+                        backgroundColor: 'rgba(245, 124, 0, 0.75)',
+                        borderColor: '#F57C00',
+                        borderWidth: 1.5,
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true, padding: 16 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': R$ ' + context.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => 'R$ ' + v.toFixed(2)
+                        }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // ============================================
+    // LISTAS
+    // ============================================
     updateDebtors(servicos) {
         const container = document.getElementById('debtorsList');
         if (!container) return;
@@ -438,6 +772,9 @@ export class EconomiaManager {
         if (window.lucide) lucide.createIcons();
     }
 
+    // ============================================
+    // MODAL DETALHES DO CLIENTE
+    // ============================================
     async showClienteDetalhe(clienteId) {
         try {
             const { data: cliente, error: clienteError } = await supabase
@@ -501,7 +838,11 @@ export class EconomiaManager {
         }
     }
 
+    // ============================================
+    // EVENTOS
+    // ============================================
     setupEvents() {
+        // Filtro rápido
         document.querySelectorAll('.filter-btn[data-periodo]').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn[data-periodo]').forEach(b => b.classList.remove('active'));
@@ -511,6 +852,23 @@ export class EconomiaManager {
             });
         });
 
+        // Filtro por Ano/Mês
+        document.getElementById('aplicarFiltroPeriodoBtn')?.addEventListener('click', () => {
+            this.anoSelecionado = document.getElementById('anoSelector')?.value || 'todos';
+            this.mesSelecionado = document.getElementById('mesSelector')?.value || 'todos';
+            this.loadData();
+        });
+
+        // Enter nos selects para aplicar
+        document.querySelectorAll('#anoSelector, #mesSelector').forEach(select => {
+            select?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('aplicarFiltroPeriodoBtn')?.click();
+                }
+            });
+        });
+
+        // Refresh
         document.getElementById('refreshBtn')?.addEventListener('click', () => {
             const btn = document.getElementById('refreshBtn');
             const icon = btn.querySelector('i');
@@ -520,6 +878,7 @@ export class EconomiaManager {
             });
         });
 
+        // Fechar modais
         const closeButtons = ['closeDetalheModal', 'closeDetalheModalBtn'];
         closeButtons.forEach(id => {
             document.getElementById(id)?.addEventListener('click', () => {
@@ -541,8 +900,34 @@ export class EconomiaManager {
     }
 }
 
+// ============================================
+// INICIALIZAÇÃO
+// ============================================
+
 window.economiaManager = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-    window.economiaManager = new EconomiaManager();
-});
+const initEconomia = async () => {
+    try {
+        const { AuthService } = await import('./auth.js');
+
+        const user = await AuthService.checkAuth();
+        if (user) {
+            document.getElementById('userName').textContent = user.nome || 'Usuário';
+            document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
+        }
+
+        if (window.lucide) lucide.createIcons();
+
+        window.economiaManager = new EconomiaManager();
+
+        console.log('✅ Economia inicializado!');
+    } catch (error) {
+        console.error('❌ Erro na inicialização:', error);
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEconomia);
+} else {
+    initEconomia();
+}

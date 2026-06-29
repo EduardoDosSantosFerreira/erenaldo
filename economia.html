@@ -31,6 +31,9 @@
                     </div>
                 </div>
                 <div class="page-actions">
+                    <button class="btn btn-outline" id="helpBtn" title="Tabela de preços">
+                        <i data-lucide="help-circle"></i>
+                    </button>
                     <button class="btn btn-outline" id="refreshBtn" title="Atualizar dados">
                         <i data-lucide="refresh-cw"></i>
                     </button>
@@ -44,9 +47,42 @@
                 <button class="filter-btn" data-periodo="mes">Este mês</button>
             </div>
 
-            <!-- Cards de Resumo - 2 em cima, 2 no meio, 2 em baixo -->
+            <!-- ============================================
+            NOVO: FILTRO POR ANO/MÊS
+            ============================================ -->
+            <div class="period-selector">
+                <div class="selector-group">
+                    <label>Ano</label>
+                    <select id="anoSelector">
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
+                <div class="selector-group">
+                    <label>Mês</label>
+                    <select id="mesSelector">
+                        <option value="todos">Todos</option>
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+                <div class="selector-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" id="aplicarFiltroPeriodoBtn">Aplicar</button>
+                </div>
+            </div>
+
+            <!-- Cards de Resumo -->
             <section class="cards-grid">
-                <!-- Linha 1 -->
                 <div class="card-summary">
                     <div class="card-icon green">
                         <i data-lucide="check-circle"></i>
@@ -65,8 +101,6 @@
                         <span class="card-value" id="totalAReceber">R$ 0,00</span>
                     </div>
                 </div>
-
-                <!-- Linha 2 -->
                 <div class="card-summary">
                     <div class="card-icon blue">
                         <i data-lucide="briefcase"></i>
@@ -85,8 +119,6 @@
                         <span class="card-value" id="clientesInadimplentes">0</span>
                     </div>
                 </div>
-
-                <!-- Linha 3 -->
                 <div class="card-summary">
                     <div class="card-icon teal">
                         <i data-lucide="calculator"></i>
@@ -107,20 +139,27 @@
                 </div>
             </section>
 
-            <!-- Gráficos -->
+            <!-- ============================================
+            GRÁFICOS REFORMULADOS
+            ============================================ -->
             <section class="charts-section">
+                <!-- Gráfico Principal: Evolução Financeira -->
                 <div class="chart-container main-chart">
                     <div class="chart-header">
                         <div>
                             <h3><i data-lucide="trending-up"></i> Evolução Financeira</h3>
-                            <span class="chart-subtitle">Recebidos vs Pendentes ao longo do tempo</span>
+                            <span class="chart-subtitle" id="evolutionSubtitle">Recebidos vs Pendentes ao longo do tempo</span>
                         </div>
+                        <div class="chart-legend-custom" id="evolutionLegend"></div>
                     </div>
-                    <canvas id="evolutionChart"></canvas>
+                    <div class="chart-wrapper">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
                 </div>
 
-                <!-- Gráficos Secundários em Coluna -->
+                <!-- Gráficos Secundários -->
                 <div class="charts-secondary">
+                    <!-- Gráfico de Distribuição -->
                     <div class="chart-container">
                         <div class="chart-header">
                             <div>
@@ -128,8 +167,25 @@
                                 <span class="chart-subtitle">Proporção entre recebido e pendente</span>
                             </div>
                         </div>
-                        <canvas id="comparisonChart"></canvas>
+                        <div class="chart-wrapper small">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
                     </div>
+
+                    <!-- Gráfico Comparativo Mensal -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <div>
+                                <h3><i data-lucide="bar-chart-2"></i> Comparativo Mensal</h3>
+                                <span class="chart-subtitle" id="comparativoSubtitle">Faturamento por mês</span>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="monthlyChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
                     <div class="chart-container">
                         <div class="chart-header">
                             <div>
@@ -159,9 +215,8 @@
                 </div>
             </section>
 
-            <!-- Listas em Coluna (empilhadas) -->
+            <!-- Listas -->
             <div class="lists-column">
-                <!-- Clientes com Maior Valor em Aberto -->
                 <section class="list-section">
                     <div class="list-header">
                         <h3><i data-lucide="users"></i> Clientes com Maior Valor em Aberto</h3>
@@ -175,7 +230,6 @@
                     </div>
                 </section>
 
-                <!-- Últimos Recebimentos -->
                 <section class="list-section">
                     <div class="list-header">
                         <h3><i data-lucide="credit-card"></i> Últimos Recebimentos</h3>
@@ -189,7 +243,6 @@
                     </div>
                 </section>
 
-                <!-- Serviços Pendentes de Pagamento -->
                 <section class="list-section">
                     <div class="list-header">
                         <h3><i data-lucide="alert-triangle"></i> Serviços Pendentes de Pagamento</h3>
@@ -259,6 +312,45 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="closeDetalheModalBtn">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+    NOVO: MODAL TABELA DE PREÇOS
+    ============================================ -->
+    <div class="modal" id="precosModal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h2><i data-lucide="dollar-sign" style="width: 22px; height: 22px; color: var(--primary);"></i> Tabela de Preços</h2>
+                <button class="modal-close" id="closePrecosModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--gray-500); font-size: 13px; margin-bottom: 16px;">
+                    Valores de referência para os serviços oferecidos.
+                </p>
+                <div class="tabela-precos-wrapper">
+                    <table class="tabela-precos">
+                        <thead>
+                            <tr>
+                                <th>Serviço</th>
+                                <th>Varejo</th>
+                                <th>Atacado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="precosTableBody">
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 12px; font-size: 11px; color: var(--gray-400); text-align: center;">
+                    * Valores sujeitos a alteração sem aviso prévio
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closePrecosModalBtn">Fechar</button>
             </div>
         </div>
     </div>

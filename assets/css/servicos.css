@@ -1,10 +1,7 @@
 /* ============================================
-   SERVIÇOS - CSS COMPLETO UNIFICADO
+   SERVIÇOS - CSS COMPLETO
    ============================================ */
 
-/* ============================================
-   VARIÁVEIS
-   ============================================ */
 :root {
     --primary: #B71C1C;
     --primary-dark: #8B0000;
@@ -39,12 +36,15 @@
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
+
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ============================================
-   STATS CARDS - 2 LINHAS DE 3
+   STATS CARDS
    ============================================ */
 .stats-grid {
     display: grid;
@@ -53,7 +53,6 @@
     margin-bottom: 24px;
 }
 
-/* Os cards 4, 5 e 6 pulam para a próxima linha automaticamente */
 .stat-card {
     background: var(--white);
     border-radius: var(--radius);
@@ -93,6 +92,9 @@
 .stat-card .stat-value.recebido {
     color: #4CAF50;
 }
+.stat-card .stat-value.total {
+    color: var(--secondary);
+}
 
 .stat-card .stat-label {
     font-size: 12px;
@@ -103,18 +105,9 @@
     font-weight: 600;
 }
 
-/* Destaque para o card Valor a Receber */
 .stat-card.destaque {
     border: 2px solid #F57C00;
     background: #FFF8E1;
-}
-
-.stat-card.destaque::after {
-    content: "";
-    position: absolute;
-    top: 8px;
-    right: 12px;
-    font-size: 20px;
 }
 
 .stat-card.destaque .stat-value {
@@ -174,7 +167,7 @@
 }
 
 /* ============================================
-   FILTERS BAR
+   FILTERS BAR - COM BUSCA
    ============================================ */
 .filters-bar {
     background: var(--white);
@@ -215,24 +208,96 @@
     border-radius: var(--radius-sm);
     font-size: 14px;
     background: var(--white);
+    transition: var(--transition);
+    cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23757575' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     padding-right: 34px;
-    transition: var(--transition);
-    cursor: pointer;
-}
-
-.filters-bar .filter-group select:hover {
-    border-color: var(--gray-400);
 }
 
 .filters-bar .filter-group select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1);
+}
+
+.filters-bar .filter-group select:hover {
+    border-color: var(--gray-400);
+}
+
+/* ============================================
+   CAMPO DE BUSCA
+   ============================================ */
+.search-group {
+    position: relative;
+    flex: 2;
+    min-width: 180px;
+}
+
+.search-group input {
+    width: 100%;
+    padding: 9px 38px 9px 38px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--white);
+    transition: var(--transition);
+    height: 42px;
+}
+
+.search-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1);
+}
+
+.search-group input::placeholder {
+    color: var(--gray-400);
+}
+
+.search-group .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+}
+
+.search-group .clear-search {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 4px;
+    display: none;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.search-group .clear-search:hover {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.search-group .clear-search.visible {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-group .clear-search i {
+    width: 16px;
+    height: 16px;
 }
 
 .filters-bar .filter-actions {
@@ -305,11 +370,21 @@
     }
 }
 
-.servico-card:nth-child(1) { animation-delay: 0.03s; }
-.servico-card:nth-child(2) { animation-delay: 0.06s; }
-.servico-card:nth-child(3) { animation-delay: 0.09s; }
-.servico-card:nth-child(4) { animation-delay: 0.12s; }
-.servico-card:nth-child(5) { animation-delay: 0.15s; }
+.servico-card:nth-child(1) {
+    animation-delay: 0.03s;
+}
+.servico-card:nth-child(2) {
+    animation-delay: 0.06s;
+}
+.servico-card:nth-child(3) {
+    animation-delay: 0.09s;
+}
+.servico-card:nth-child(4) {
+    animation-delay: 0.12s;
+}
+.servico-card:nth-child(5) {
+    animation-delay: 0.15s;
+}
 
 .servico-card:hover {
     transform: translateY(-2px);
@@ -331,6 +406,13 @@
     color: var(--secondary);
     flex: 1;
     margin: 0;
+}
+
+.servico-card .card-header .status-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .servico-card .card-body {
@@ -421,6 +503,29 @@
     transform: scale(0.95);
 }
 
+.servico-card .card-payment-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--gray-100);
+    margin-top: 4px;
+}
+
+.servico-card .card-payment-toggle .toggle-info {
+    font-size: 12px;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.servico-card .card-payment-toggle .toggle-info i {
+    width: 14px;
+    height: 14px;
+}
+
 /* ============================================
    BADGE STATUS
    ============================================ */
@@ -455,6 +560,135 @@
 .badge-status.cancelado {
     background: #FFEBEE;
     color: #C62828;
+}
+
+.payment-indicator {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.payment-indicator.pago {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.payment-indicator.nao-pago {
+    background: #FFF3E0;
+    color: #E65100;
+}
+
+.payment-indicator.nao-aplicavel {
+    background: var(--gray-200);
+    color: var(--gray-500);
+}
+
+/* ============================================
+   SWITCH
+   ============================================ */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ccc;
+    transition: var(--transition);
+    border-radius: 24px;
+}
+
+.switch .slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    transition: var(--transition);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.switch input:checked+.slider {
+    background: #4CAF50;
+}
+
+.switch input:checked+.slider::before {
+    transform: translateX(20px);
+}
+
+.switch input:disabled+.slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.switch .slider.pago {
+    background: #4CAF50;
+}
+
+.switch .slider.pago::before {
+    transform: translateX(20px);
+}
+
+.payment-status-text {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 12px;
+    border-radius: 12px;
+}
+
+.payment-status-text.pago {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.payment-status-text.nao-pago {
+    background: #FFF3E0;
+    color: #E65100;
+}
+
+.payment-toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.payment-toggle-group label {
+    margin-bottom: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.payment-toggle-group label i {
+    width: 16px;
+    height: 16px;
 }
 
 /* ============================================
@@ -560,20 +794,92 @@
     transform: translateX(-50%) translateY(0);
 }
 
-#toast.success { background: #4CAF50; }
-#toast.error { background: #f44336; }
-#toast.warning { background: #F57C00; }
+#toast.success {
+    background: #4CAF50;
+}
+#toast.error {
+    background: #f44336;
+}
+#toast.warning {
+    background: #F57C00;
+}
 
 /* ============================================
-   MODAL - VALIDAÇÃO
+   MODAL
    ============================================ */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 300;
+    align-items: flex-end;
+    justify-content: center;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 .modal-content {
+    background: var(--white);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
     animation: slideUp 0.3s ease;
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.modal-header h2 {
+    font-size: 18px;
+    color: var(--secondary);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 4px;
+    touch-action: manipulation;
+}
+
+.modal-close i {
+    width: 24px;
+    height: 24px;
 }
 
 .modal-content .form-group {
@@ -625,6 +931,14 @@
 
 .form-error.show {
     display: block;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-200);
 }
 
 .modal-footer .btn {
@@ -746,15 +1060,22 @@
     color: #f44336;
 }
 
-.form-group textarea + .input-status {
+.form-group textarea+.input-status {
     top: 14px;
     transform: none;
 }
 
 @keyframes shakeInput {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
 }
 
 .form-group input.shake,
@@ -786,9 +1107,7 @@
 /* ============================================
    RESPONSIVIDADE
    ============================================ */
-
-/* Tablets */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .stats-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
@@ -797,22 +1116,80 @@
     .stat-card .stat-value {
         font-size: 22px;
     }
+}
 
+@media (max-width: 768px) {
     .filters-bar .filter-row {
+        flex-direction: column;
         gap: 10px;
     }
 
     .filters-bar .filter-group {
-        min-width: 120px;
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .search-group {
+        min-width: 100%;
+    }
+
+    .filters-bar .filter-actions {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .filters-bar .filter-actions .btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .servico-card .card-body {
         grid-template-columns: 1fr 1fr;
         gap: 2px 16px;
     }
+
+    .servico-card .card-header {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .servico-card .card-header .status-group {
+        align-self: flex-start;
+    }
+
+    .servico-card .card-payment-toggle {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .servico-card .card-payment-toggle .toggle-info {
+        justify-content: center;
+    }
+
+    .modal-content {
+        padding: 16px;
+    }
+
+    .modal-content .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+
+    .payment-toggle-group {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 }
 
-/* Celulares */
 @media (max-width: 480px) {
     .quick-actions {
         flex-direction: column;
@@ -842,37 +1219,8 @@
         padding: 14px 16px;
     }
 
-    .filters-bar .filter-row {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .filters-bar .filter-group {
-        min-width: 100%;
-        max-width: 100%;
-    }
-
-    .filters-bar .filter-actions {
-        width: 100%;
-        min-width: 100%;
-    }
-
-    .filters-bar .filter-actions .btn {
-        width: 100%;
-        justify-content: center;
-    }
-
     .servico-card {
         padding: 14px 16px;
-    }
-
-    .servico-card .card-header {
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .servico-card .card-header .badge-status {
-        align-self: flex-start;
     }
 
     .servico-card .card-body {
@@ -891,23 +1239,6 @@
         padding: 8px;
     }
 
-    .modal-content {
-        padding: 16px;
-    }
-
-    .modal-content .form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-
-    .modal-footer {
-        flex-direction: column;
-    }
-
-    .modal-footer .btn {
-        width: 100%;
-    }
-
     #toast {
         bottom: 80px;
         padding: 12px 20px;
@@ -918,9 +1249,29 @@
     .form-group .input-hint {
         font-size: 10px;
     }
+
+    .search-group input {
+        font-size: 13px;
+        padding: 8px 34px 8px 34px;
+        height: 38px;
+    }
+
+    .search-group .search-icon {
+        width: 16px;
+        height: 16px;
+        left: 10px;
+    }
+
+    .search-group .clear-search {
+        right: 6px;
+    }
+
+    .search-group .clear-search i {
+        width: 14px;
+        height: 14px;
+    }
 }
 
-/* Telas muito pequenas */
 @media (max-width: 360px) {
     .stats-grid {
         grid-template-columns: 1fr 1fr;
@@ -940,9 +1291,7 @@
     }
 }
 
-/* ============================================
-   SCROLLBAR
-   ============================================ */
+/* SCROLLBAR */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -962,9 +1311,6 @@
     background: var(--gray-400);
 }
 
-/* ============================================
-   BOTTOM NAV
-   ============================================ */
 .bottom-nav a i {
     width: 24px;
     height: 24px;
