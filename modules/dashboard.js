@@ -6,6 +6,7 @@ export class Dashboard {
         this.servicos = [];
         this.currentDate = new Date();
         this.selectedDate = null;
+        this.isExpanded = false;
         this.init();
     }
 
@@ -14,6 +15,7 @@ export class Dashboard {
         this.renderCalendar();
         this.setupEventListeners();
         this.setupCardNavigation();
+        this.setupExpandButtons();
     }
 
     // ============================================
@@ -77,10 +79,8 @@ export class Dashboard {
             this.renderProximosServicos(servicosComValor.data || []);
             this.renderTimeline();
 
-            // Selecionar hoje
             this.selectDate(new Date());
 
-            // Esconder loading
             const loading = document.getElementById('loadingDashboard');
             const data = document.getElementById('dashboardData');
             if (loading) loading.style.display = 'none';
@@ -283,11 +283,11 @@ export class Dashboard {
     }
 
     // ============================================
-    // CALENDÁRIO - RENDERIZAÇÃO
+    // CALENDÁRIO - RENDERIZAÇÃO COM ELLIPSIS
     // ============================================
     
-    renderCalendar() {
-        const container = document.getElementById('calendarGrid');
+    renderCalendar(targetId = 'calendarGrid', titleId = 'calendarTitle', badgeId = 'eventCountBadge') {
+        const container = document.getElementById(targetId);
         if (!container) return;
 
         const year = this.currentDate.getFullYear();
@@ -296,14 +296,17 @@ export class Dashboard {
         // Título
         const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
+        const titleEl = document.getElementById(titleId);
+        if (titleEl) {
+            titleEl.textContent = `${monthNames[month]} ${year}`;
+        }
 
         // Contar eventos do mês
         const monthEvents = this.servicos.filter(s => {
             const d = new Date(s.data);
             return d.getMonth() === month && d.getFullYear() === year;
         });
-        const badge = document.getElementById('eventCountBadge');
+        const badge = document.getElementById(badgeId);
         if (badge) {
             const count = monthEvents.length;
             badge.textContent = `${count} evento${count !== 1 ? 's' : ''}`;
@@ -313,24 +316,20 @@ export class Dashboard {
         // Dias da semana
         const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         
-        // Primeiro dia do mês
         const firstDay = new Date(year, month, 1);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const startDayOfWeek = firstDay.getDay();
 
         let html = '<div class="calendar-grid">';
 
-        // Cabeçalho
         weekDays.forEach(day => {
             html += `<div class="calendar-weekday">${day}</div>`;
         });
 
-        // Células vazias
         for (let i = 0; i < startDayOfWeek; i++) {
             html += `<div class="calendar-day empty"></div>`;
         }
 
-        // Dias do mês
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
 
@@ -351,10 +350,14 @@ export class Dashboard {
 
             if (hasEvents) {
                 html += `<div class="day-events">`;
+                // Mostrar no máximo 3 eventos com ellipsis
                 const displayEvents = dayEvents.slice(0, 3);
                 displayEvents.forEach(e => {
                     const statusClass = e.status || 'pendente';
-                    html += `<div class="day-event ${statusClass}" data-id="${e.id}" title="${e.servico} - ${e.clientes?.nome || ''}">${e.servico}</div>`;
+                    // Título completo para tooltip
+                    const fullTitle = `${e.servico} - ${e.clientes?.nome || ''}`;
+                    // Texto exibido (cortado com ellipsis via CSS)
+                    html += `<div class="day-event ${statusClass}" data-id="${e.id}" title="${fullTitle}">${e.servico}</div>`;
                 });
                 if (dayEvents.length > 3) {
                     html += `<div class="day-more">+${dayEvents.length - 3} mais</div>`;
@@ -365,7 +368,6 @@ export class Dashboard {
             html += `</div>`;
         }
 
-        // Completar a última linha
         const totalCells = startDayOfWeek + daysInMonth;
         const remainingCells = (7 - (totalCells % 7)) % 7;
         for (let i = 0; i < remainingCells; i++) {
@@ -416,7 +418,6 @@ export class Dashboard {
         const dateStr = date.toISOString().split('T')[0];
         const dayEvents = this.servicos.filter(s => s.data === dateStr);
 
-        // Título
         const selectedDateEl = document.getElementById('selectedDate');
         if (selectedDateEl) {
             const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
@@ -426,7 +427,6 @@ export class Dashboard {
             selectedDateEl.innerHTML = `<strong>${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${day} de ${month} de ${year}</strong>`;
         }
 
-        // Detalhes
         const dayDetails = document.getElementById('dayDetailsContent');
         if (dayDetails) {
             if (dayEvents.length === 0) {
@@ -473,12 +473,98 @@ export class Dashboard {
         // Destacar dia
         document.querySelectorAll('.calendar-day.selected').forEach(el => {
             el.classList.remove('selected');
-            el.style.borderColor = '';
-            el.style.borderWidth = '';
         });
         document.querySelectorAll('.calendar-day:not(.empty)').forEach(el => {
             if (el.dataset.date === dateStr) {
                 el.classList.add('selected');
+            }
+        });
+
+        if (this.isExpanded) {
+            document.querySelectorAll('#overlayCalendarGrid .calendar-day.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.querySelectorAll('#overlayCalendarGrid .calendar-day:not(.empty)').forEach(el => {
+                if (el.dataset.date === dateStr) {
+                    el.classList.add('selected');
+                }
+            });
+        }
+    }
+
+    // ============================================
+    // EXPANSÃO DO CALENDÁRIO
+    // ============================================
+    setupExpandButtons() {
+        const expandBtn = document.getElementById('expandCalendarBtn');
+        const closeBtn = document.getElementById('closeExpandBtn');
+        const overlay = document.getElementById('calendarOverlay');
+
+        expandBtn?.addEventListener('click', () => {
+            this.isExpanded = true;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            this.renderCalendar('overlayCalendarGrid', 'overlayTitle', 'overlayEventCount');
+            
+            if (this.selectedDate) {
+                const dateStr = this.selectedDate.toISOString().split('T')[0];
+                document.querySelectorAll('#overlayCalendarGrid .calendar-day:not(.empty)').forEach(el => {
+                    if (el.dataset.date === dateStr) {
+                        el.classList.add('selected');
+                    }
+                });
+            }
+        });
+
+        const closeOverlay = () => {
+            this.isExpanded = false;
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        closeBtn?.addEventListener('click', closeOverlay);
+        overlay?.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeOverlay();
+            }
+        });
+
+        document.getElementById('overlayPrevBtn')?.addEventListener('click', () => {
+            this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+            this.renderCalendar('overlayCalendarGrid', 'overlayTitle', 'overlayEventCount');
+            this.renderCalendar('calendarGrid', 'calendarTitle', 'eventCountBadge');
+            if (this.selectedDate) {
+                const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
+                if (newDate.getMonth() === this.currentDate.getMonth()) {
+                    this.selectDate(newDate);
+                }
+            }
+        });
+
+        document.getElementById('overlayNextBtn')?.addEventListener('click', () => {
+            this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+            this.renderCalendar('overlayCalendarGrid', 'overlayTitle', 'overlayEventCount');
+            this.renderCalendar('calendarGrid', 'calendarTitle', 'eventCountBadge');
+            if (this.selectedDate) {
+                const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
+                if (newDate.getMonth() === this.currentDate.getMonth()) {
+                    this.selectDate(newDate);
+                }
+            }
+        });
+
+        document.getElementById('overlayTodayBtn')?.addEventListener('click', () => {
+            const today = new Date();
+            this.currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            this.renderCalendar('overlayCalendarGrid', 'overlayTitle', 'overlayEventCount');
+            this.renderCalendar('calendarGrid', 'calendarTitle', 'eventCountBadge');
+            this.selectDate(today);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isExpanded) {
+                closeOverlay();
             }
         });
     }
@@ -489,7 +575,7 @@ export class Dashboard {
     setupEventListeners() {
         document.getElementById('prevMonthBtn')?.addEventListener('click', () => {
             this.currentDate.setMonth(this.currentDate.getMonth() - 1);
-            this.renderCalendar();
+            this.renderCalendar('calendarGrid', 'calendarTitle', 'eventCountBadge');
             if (this.selectedDate) {
                 const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
                 if (newDate.getMonth() === this.currentDate.getMonth()) {
@@ -500,7 +586,7 @@ export class Dashboard {
 
         document.getElementById('nextMonthBtn')?.addEventListener('click', () => {
             this.currentDate.setMonth(this.currentDate.getMonth() + 1);
-            this.renderCalendar();
+            this.renderCalendar('calendarGrid', 'calendarTitle', 'eventCountBadge');
             if (this.selectedDate) {
                 const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
                 if (newDate.getMonth() === this.currentDate.getMonth()) {
@@ -512,7 +598,7 @@ export class Dashboard {
         document.getElementById('todayBtn')?.addEventListener('click', () => {
             const today = new Date();
             this.currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
-            this.renderCalendar();
+            this.renderCalendar('calendarGrid', 'calendarTitle', 'eventCountBadge');
             this.selectDate(today);
         });
     }

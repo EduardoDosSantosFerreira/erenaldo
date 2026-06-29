@@ -94,9 +94,9 @@
                 </section>
 
                 <!-- ============================================
-                SECTION 2: CALENDÁRIO
+                SECTION 2: CALENDÁRIO COM EXPANSÃO
                 ============================================ -->
-                <section class="calendar-section-full">
+                <section class="calendar-section-full" id="calendarSection">
                     <div class="calendar-header">
                         <div class="calendar-title-group">
                             <h3><i data-lucide="calendar"></i> Agenda de Serviços</h3>
@@ -107,6 +107,9 @@
                             <span class="month-label" id="calendarTitle">Carregando...</span>
                             <button class="nav-btn" id="nextMonthBtn" title="Próximo mês">›</button>
                             <button class="today-btn" id="todayBtn">Hoje</button>
+                            <button class="expand-btn" id="expandCalendarBtn" title="Expandir calendário">
+                                <i data-lucide="maximize-2"></i>
+                            </button>
                         </div>
                     </div>
                     <div id="calendarGrid"></div>
@@ -115,7 +118,7 @@
                 <!-- ============================================
                 SECTION 3: RESUMO DO DIA
                 ============================================ -->
-                <section class="day-details-full">
+                <section class="day-details-full" id="dayDetailsSection">
                     <div class="day-details-header">
                         <h3><i data-lucide="list"></i> Atividades do Dia</h3>
                         <span class="day-date" id="selectedDate"><strong>Selecione um dia</strong></span>
@@ -208,6 +211,34 @@
             <a href="notas.html"><i data-lucide="file-text"></i><span>Notas</span></a>
             <a href="economia.html"><i data-lucide="dollar-sign"></i><span>Economia</span></a>
         </nav>
+    </div>
+
+    <!-- ============================================
+    OVERLAY PARA CALENDÁRIO EXPANDIDO
+    ============================================ -->
+    <div class="calendar-overlay" id="calendarOverlay">
+        <div class="calendar-overlay-content">
+            <div class="calendar-overlay-header">
+                <h2><i data-lucide="calendar"></i> Agenda de Serviços</h2>
+                <button class="close-expand-btn" id="closeExpandBtn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="calendar-overlay-body">
+                <div class="calendar-header">
+                    <div class="calendar-title-group">
+                        <span class="event-count-badge" id="overlayEventCount">0 eventos</span>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn" id="overlayPrevBtn">‹</button>
+                        <span class="month-label" id="overlayTitle">Carregando...</span>
+                        <button class="nav-btn" id="overlayNextBtn">›</button>
+                        <button class="today-btn" id="overlayTodayBtn">Hoje</button>
+                    </div>
+                </div>
+                <div id="overlayCalendarGrid"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
