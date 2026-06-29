@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERENALDO - Gestão de Usuários</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/gestao.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <a href="dashboard.html" class="logo">ERENAL<span>DO</span></a>
+            <div class="user-info">
+                <span class="user-name" id="userName">Carregando...</span>
+                <div class="user-avatar" id="userAvatar" role="button" tabindex="0">
+                    A
+                </div>
+                <div class="user-dropdown" id="userDropdown" role="menu">
+                    <div class="dropdown-header">
+                        <div class="dropdown-avatar" id="dropdownAvatar">A</div>
+                        <div class="dropdown-user-info">
+                            <span class="dropdown-name" id="dropdownName">Usuário</span>
+                            <span class="dropdown-email" id="dropdownEmail">usuario@email.com</span>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="gestao.html" class="dropdown-item">
+                        <i data-lucide="settings"></i>
+                        Gestão
+                    </a>
+                    <button class="dropdown-item logout" id="logoutBtn">
+                        <i data-lucide="log-out"></i>
+                        Sair
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="gestao-main">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title">
+                    <i data-lucide="users"></i>
+                    <div>
+                        <h1>Gerenciamento de Usuários</h1>
+                        <span>Cadastre, edite e gerencie os usuários do sistema</span>
+                    </div>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" id="novoUsuarioBtn">
+                        <i data-lucide="user-plus"></i>
+                        Novo Usuário
+                    </button>
+                    <button class="btn btn-outline" id="refreshBtn">
+                        <i data-lucide="refresh-cw"></i>
+                        Atualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela de Usuários -->
+            <section class="table-section">
+                <div class="table-header">
+                    <div class="table-title">
+                        <h3><i data-lucide="users"></i> Usuários Cadastrados</h3>
+                        <span class="table-count" id="usuariosCount">0 usuários</span>
+                    </div>
+                    <div class="table-actions">
+                        <div class="search-wrapper">
+                            <i data-lucide="search" class="search-icon"></i>
+                            <input type="text" id="searchUsuarios" placeholder="Buscar usuário...">
+                            <button class="clear-search" id="clearSearchBtn">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Perfil</th>
+                                <th>Cadastro</th>
+                                <th>Status</th>
+                                <th class="actions-col">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usuariosTableBody">
+                            <tr>
+                                <td colspan="6" class="loading-row">
+                                    <div class="loading-spinner"></div>
+                                    <span>Carregando usuários...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-pagination">
+                    <span class="pagination-info" id="paginationInfo">Mostrando 0 de 0 usuários</span>
+                    <div class="pagination-buttons">
+                        <button class="pagination-btn" id="prevPageBtn" disabled>
+                            <i data-lucide="chevron-left"></i>
+                        </button>
+                        <span class="pagination-current" id="paginationCurrent">1</span>
+                        <button class="pagination-btn" id="nextPageBtn">
+                            <i data-lucide="chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="dashboard.html">
+                <i data-lucide="home"></i>
+                <span>Início</span>
+            </a>
+            <a href="clientes.html">
+                <i data-lucide="users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="servicos.html">
+                <i data-lucide="briefcase"></i>
+                <span>Serviços</span>
+            </a>
+            <a href="notas.html">
+                <i data-lucide="file-text"></i>
+                <span>Notas</span>
+            </a>
+            <a href="economia.html">
+                <i data-lucide="dollar-sign"></i>
+                <span>Economia</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal Usuário -->
+    <div class="modal" id="usuarioModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="modalUsuarioTitle">Novo Usuário</h2>
+                <button class="modal-close" id="closeUsuarioModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="usuarioForm">
+                <input type="hidden" id="usuarioId">
+                <div class="form-group">
+                    <label>Nome *</label>
+                    <input type="text" id="usuarioNome" required placeholder="Nome completo">
+                </div>
+                <div class="form-group">
+                    <label>E-mail *</label>
+                    <input type="email" id="usuarioEmail" required placeholder="email@exemplo.com">
+                </div>
+                <div class="form-group">
+                    <label>Perfil</label>
+                    <select id="usuarioPerfil">
+                        <option value="tecnico">Técnico</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="usuarioStatus">
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeUsuarioModalBtn">Cancelar</button>
+                <button class="btn btn-primary" id="saveUsuarioBtn">
+                    <i data-lucide="check"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmação -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content" style="max-width: 340px;">
+            <div class="modal-header">
+                <h2>Confirmar</h2>
+                <button class="modal-close" id="closeConfirmModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div style="text-align: center; padding: 16px 0;">
+                <i data-lucide="alert-triangle" style="width: 48px; height: 48px; color: #F57C00; margin-bottom: 12px;"></i>
+                <p id="confirmMessage" style="font-size: 15px; color: var(--gray-600);">Tem certeza que deseja excluir este usuário?</p>
+            </div>
+            <div class="modal-footer" style="border-top: none; padding-top: 0;">
+                <button class="btn btn-secondary" id="confirmCancelBtn">Cancelar</button>
+                <button class="btn btn-danger" id="confirmActionBtn">
+                    <i data-lucide="trash-2"></i>
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast">
+        <i data-lucide="check-circle"></i>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="modules/gestao.js"></script>
+</body>
+</html>

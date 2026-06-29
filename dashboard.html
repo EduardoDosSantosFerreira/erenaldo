@@ -9,14 +9,35 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <a href="dashboard.html" class="logo">ERENAL<span>DO</span></a>
-            <div class="user-info">
-                <span class="user-name" id="userName">Carregando...</span>
-                <div class="user-avatar" id="userAvatar">A</div>
+<!-- Header com Dropdown Global -->
+<header class="app-header">
+    <a href="dashboard.html" class="logo">ERENAL<span>DO</span></a>
+    <div class="user-info">
+        <span class="user-name" id="userName">Carregando...</span>
+        <div class="user-avatar" id="userAvatar" role="button" tabindex="0" aria-haspopup="true">
+            A
+        </div>
+        <!-- Dropdown do Usuário -->
+        <div class="user-dropdown" id="userDropdown" role="menu">
+            <div class="dropdown-header">
+                <div class="dropdown-avatar" id="dropdownAvatar">A</div>
+                <div class="dropdown-user-info">
+                    <span class="dropdown-name" id="dropdownName">Usuário</span>
+                    <span class="dropdown-email" id="dropdownEmail">usuario@email.com</span>
+                </div>
             </div>
-        </header>
+            <div class="dropdown-divider"></div>
+            <a href="gestao.html" class="dropdown-item" role="menuitem">
+                <i data-lucide="settings"></i>
+                Gestão
+            </a>
+            <button class="dropdown-item logout" id="logoutBtn" role="menuitem">
+                <i data-lucide="log-out"></i>
+                Sair
+            </button>
+        </div>
+    </div>
+</header>
 
         <!-- Content -->
         <main class="dashboard-main">
@@ -261,6 +282,7 @@
 
         const dashboard = new Dashboard();
         window.dashboard = dashboard;
-    </script>
+    </script>    <script src="modules/dropdown.js"></script>
+
 </body>
 </html>
