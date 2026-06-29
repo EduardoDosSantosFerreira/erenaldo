@@ -116,24 +116,7 @@
                 </section>
 
                 <!-- ============================================
-                SECTION 3: RESUMO DO DIA
-                ============================================ -->
-                <section class="day-details-full" id="dayDetailsSection">
-                    <div class="day-details-header">
-                        <h3><i data-lucide="list"></i> Atividades do Dia</h3>
-                        <span class="day-date" id="selectedDate"><strong>Selecione um dia</strong></span>
-                    </div>
-                    <div id="dayDetailsContent">
-                        <div class="empty-day">
-                            <span class="empty-icon">📅</span>
-                            <h4>Nenhum dia selecionado</h4>
-                            <p>Clique em uma data no calendário</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ============================================
-                SECTION 4: RESUMO FINANCEIRO
+                SECTION 3: RESUMO FINANCEIRO
                 ============================================ -->
                 <section class="financeiro-resumo-full">
                     <div class="resumo-header">
@@ -164,7 +147,7 @@
                 </section>
 
                 <!-- ============================================
-                SECTION 5: PRÓXIMOS SERVIÇOS
+                SECTION 4: PRÓXIMOS SERVIÇOS
                 ============================================ -->
                 <section class="servicos-list-full">
                     <div class="list-header">
@@ -176,7 +159,7 @@
                 </section>
 
                 <!-- ============================================
-                SECTION 6: ÚLTIMOS SERVIÇOS
+                SECTION 5: ÚLTIMOS SERVIÇOS
                 ============================================ -->
                 <section class="servicos-list-full">
                     <div class="list-header">
@@ -189,7 +172,7 @@
                 </section>
 
                 <!-- ============================================
-                SECTION 7: TIMELINE
+                SECTION 6: TIMELINE
                 ============================================ -->
                 <section class="timeline-section">
                     <div class="timeline-header">
@@ -237,6 +220,26 @@
                     </div>
                 </div>
                 <div id="overlayCalendarGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+    MODAL DE ATIVIDADES DO DIA
+    ============================================ -->
+    <div class="day-modal-overlay" id="dayModalOverlay">
+        <div class="day-modal-content">
+            <div class="day-modal-header">
+                <div class="day-modal-title">
+                    <i data-lucide="list"></i>
+                    <h2 id="dayModalTitle">Atividades do Dia</h2>
+                </div>
+                <button class="day-modal-close" id="dayModalClose">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="day-modal-body" id="dayModalBody">
+                <!-- Conteúdo dinâmico -->
             </div>
         </div>
     </div>

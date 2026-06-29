@@ -16,6 +16,7 @@ export class Dashboard {
         this.setupEventListeners();
         this.setupCardNavigation();
         this.setupExpandButtons();
+        this.setupDayModal();
     }
 
     // ============================================
@@ -79,7 +80,8 @@ export class Dashboard {
             this.renderProximosServicos(servicosComValor.data || []);
             this.renderTimeline();
 
-            this.selectDate(new Date());
+            const hoje = new Date();
+            this.selectedDate = hoje;
 
             const loading = document.getElementById('loadingDashboard');
             const data = document.getElementById('dashboardData');
@@ -164,40 +166,97 @@ export class Dashboard {
         `}).join('');
     }
 
+    // ============================================
+    // PRÓXIMOS SERVIÇOS - CORRIGIDO
+    // Mostra TODOS os serviços PENDENTES
+    // Ordenados por DATA (mais antigos primeiro = URGÊNCIA)
+    // ============================================
     renderProximosServicos(servicos) {
         const container = document.getElementById('proximosServicos');
         if (!container) return;
 
-        const hoje = new Date().toISOString().split('T')[0];
-        const proximos = servicos
-            .filter(s => s.status === 'pendente' || s.status === 'agendado')
-            .filter(s => s.data >= hoje)
-            .sort((a, b) => new Date(a.data) - new Date(b.data))
-            .slice(0, 5);
+        // Filtra APENAS serviços com status 'pendente'
+        const pendentes = servicos.filter(s => s.status === 'pendente');
+
+        // Ordena por data (mais antigos primeiro - URGÊNCIA)
+        const ordenadosPorUrgencia = pendentes.sort((a, b) => {
+            return new Date(a.data) - new Date(b.data);
+        });
+
+        // Pega todos os pendentes (sem limite)
+        const proximos = ordenadosPorUrgencia;
 
         if (proximos.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <i data-lucide="inbox"></i>
-                    <p>Nenhum serviço agendado</p>
+                    <i data-lucide="check-circle" style="color: #4CAF50;"></i>
+                    <p style="color: #4CAF50; font-weight: 500;">✅ Nenhum serviço pendente!</p>
+                    <p style="font-size: 11px; color: var(--gray-400);">Todos os serviços estão em dia</p>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = proximos.map(s => `
-            <div class="servico-item" onclick="window.dashboard?.goToServico('${s.id}')">
+        // Adiciona um badge de contagem
+        const countBadge = `<span class="badge-count">${proximos.length} pendente${proximos.length > 1 ? 's' : ''}</span>`;
+
+        // Atualiza o header com a contagem
+        const listHeader = container.closest('.servicos-list-full')?.querySelector('.list-header');
+        if (listHeader) {
+            const h3 = listHeader.querySelector('h3');
+            if (h3) {
+                // Remove badge antigo se existir
+                const oldBadge = h3.querySelector('.badge-count');
+                if (oldBadge) oldBadge.remove();
+                h3.innerHTML = `<i data-lucide="alert-circle"></i> Serviços Pendentes ${countBadge}`;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        const hoje = new Date();
+
+        container.innerHTML = proximos.map(s => {
+            // Calcula dias em atraso
+            const dataServico = new Date(s.data);
+            const diffTime = hoje - dataServico;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Determina nível de urgência
+            let urgenciaClass = '';
+            let urgenciaLabel = '';
+            if (diffDays > 30) {
+                urgenciaClass = 'urgencia-critica';
+                urgenciaLabel = '🔴 Crítico';
+            } else if (diffDays > 15) {
+                urgenciaClass = 'urgencia-alta';
+                urgenciaLabel = '🟠 Alta';
+            } else if (diffDays > 7) {
+                urgenciaClass = 'urgencia-media';
+                urgenciaLabel = '🟡 Média';
+            } else if (diffDays > 0) {
+                urgenciaClass = 'urgencia-baixa';
+                urgenciaLabel = '🟢 Baixa';
+            } else {
+                urgenciaClass = 'urgencia-hoje';
+                urgenciaLabel = '📌 Hoje';
+            }
+
+            // Se for hoje ou futuro
+            const diasTexto = diffDays > 0 ? `${diffDays} dias` : diffDays === 0 ? 'Hoje' : `${Math.abs(diffDays)} dias`;
+
+            return `
+            <div class="servico-item ${urgenciaClass}" onclick="window.dashboard?.goToServico('${s.id}')">
                 <div class="servico-info">
                     <span class="servico-nome">${s.servico}</span>
                     <span class="servico-cliente">👤 ${s.clientes?.nome || 'Cliente não informado'}</span>
                 </div>
                 <div class="servico-meta">
+                    <span class="servico-urgencia ${urgenciaClass}">${urgenciaLabel}</span>
                     <span class="servico-data">📅 ${s.data}</span>
-                    ${s.hora ? `<span class="servico-hora">🕐 ${s.hora}</span>` : ''}
-                    <span class="servico-status ${s.status}">${s.status === 'pendente' ? 'Pendente' : 'Agendado'}</span>
+                    <span class="servico-dias">⏱️ ${diasTexto}</span>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     renderTimeline() {
@@ -283,7 +342,7 @@ export class Dashboard {
     }
 
     // ============================================
-    // CALENDÁRIO - RENDERIZAÇÃO COM ELLIPSIS
+    // CALENDÁRIO - RENDERIZAÇÃO
     // ============================================
     
     renderCalendar(targetId = 'calendarGrid', titleId = 'calendarTitle', badgeId = 'eventCountBadge') {
@@ -293,7 +352,6 @@ export class Dashboard {
         const year = this.currentDate.getFullYear();
         const month = this.currentDate.getMonth();
 
-        // Título
         const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const titleEl = document.getElementById(titleId);
@@ -301,7 +359,6 @@ export class Dashboard {
             titleEl.textContent = `${monthNames[month]} ${year}`;
         }
 
-        // Contar eventos do mês
         const monthEvents = this.servicos.filter(s => {
             const d = new Date(s.data);
             return d.getMonth() === month && d.getFullYear() === year;
@@ -313,7 +370,6 @@ export class Dashboard {
             badge.className = 'event-count-badge' + (count === 0 ? ' empty' : '');
         }
 
-        // Dias da semana
         const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         
         const firstDay = new Date(year, month, 1);
@@ -350,13 +406,10 @@ export class Dashboard {
 
             if (hasEvents) {
                 html += `<div class="day-events">`;
-                // Mostrar no máximo 3 eventos com ellipsis
                 const displayEvents = dayEvents.slice(0, 3);
                 displayEvents.forEach(e => {
                     const statusClass = e.status || 'pendente';
-                    // Título completo para tooltip
                     const fullTitle = `${e.servico} - ${e.clientes?.nome || ''}`;
-                    // Texto exibido (cortado com ellipsis via CSS)
                     html += `<div class="day-event ${statusClass}" data-id="${e.id}" title="${fullTitle}">${e.servico}</div>`;
                 });
                 if (dayEvents.length > 3) {
@@ -377,13 +430,13 @@ export class Dashboard {
         html += '</div>';
         container.innerHTML = html;
 
-        // Eventos de clique
         container.querySelectorAll('.calendar-day:not(.empty)').forEach(dayEl => {
             dayEl.addEventListener('click', () => {
                 const dateStr = dayEl.dataset.date;
                 if (dateStr) {
                     const date = new Date(dateStr + 'T00:00:00');
-                    this.selectDate(date);
+                    this.selectedDate = date;
+                    this.openDayModal(date);
                 }
             });
         });
@@ -404,7 +457,8 @@ export class Dashboard {
                     const dateStr = dayEl.dataset.date;
                     if (dateStr) {
                         const date = new Date(dateStr + 'T00:00:00');
-                        this.selectDate(date);
+                        this.selectedDate = date;
+                        this.openDayModal(date);
                     }
                 }
             });
@@ -413,82 +467,126 @@ export class Dashboard {
         if (window.lucide) lucide.createIcons();
     }
 
-    selectDate(date) {
-        this.selectedDate = date;
+    // ============================================
+    // MODAL DE ATIVIDADES DO DIA
+    // ============================================
+    setupDayModal() {
+        const overlay = document.getElementById('dayModalOverlay');
+        const closeBtn = document.getElementById('dayModalClose');
+
+        closeBtn?.addEventListener('click', () => {
+            this.closeDayModal();
+        });
+
+        overlay?.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                this.closeDayModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && overlay?.classList.contains('active')) {
+                this.closeDayModal();
+            }
+        });
+    }
+
+    openDayModal(date) {
+        const overlay = document.getElementById('dayModalOverlay');
+        const body = document.getElementById('dayModalBody');
+        const title = document.getElementById('dayModalTitle');
+
+        if (!overlay || !body) return;
+
         const dateStr = date.toISOString().split('T')[0];
         const dayEvents = this.servicos.filter(s => s.data === dateStr);
 
-        const selectedDateEl = document.getElementById('selectedDate');
-        if (selectedDateEl) {
-            const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
-            const day = date.getDate();
-            const month = date.toLocaleDateString('pt-BR', { month: 'long' });
-            const year = date.getFullYear();
-            selectedDateEl.innerHTML = `<strong>${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${day} de ${month} de ${year}</strong>`;
+        const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+        const day = date.getDate();
+        const month = date.toLocaleDateString('pt-BR', { month: 'long' });
+        const year = date.getFullYear();
+        const formattedDate = `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${day} de ${month} de ${year}`;
+        
+        title.innerHTML = `
+            Atividades do Dia
+            <span class="day-date-highlight">— ${formattedDate}</span>
+        `;
+
+        const total = dayEvents.length;
+        const pendentes = dayEvents.filter(s => s.status === 'pendente').length;
+        const concluidos = dayEvents.filter(s => s.status === 'concluido').length;
+        const cancelados = dayEvents.filter(s => s.status === 'cancelado').length;
+
+        let statsHtml = `
+            <div class="day-modal-stats">
+                <div class="day-modal-stat">
+                    <span class="stat-number total">${total}</span>
+                    <span class="stat-label">Total</span>
+                </div>
+                <div class="day-modal-stat">
+                    <span class="stat-number pendente">${pendentes}</span>
+                    <span class="stat-label">Pendentes</span>
+                </div>
+                <div class="day-modal-stat">
+                    <span class="stat-number concluido">${concluidos}</span>
+                    <span class="stat-label">Concluídos</span>
+                </div>
+            </div>
+        `;
+
+        let contentHtml = '';
+
+        if (dayEvents.length === 0) {
+            contentHtml = `
+                <div class="empty-day">
+                    <span class="empty-icon">📭</span>
+                    <h4>Nenhum serviço neste dia</h4>
+                    <p>Não há atividades registradas para ${date.toLocaleDateString('pt-BR', {
+                        day: 'numeric',
+                        month: 'long'
+                    })}</p>
+                </div>
+            `;
+        } else {
+            const statusLabels = {
+                'pendente': 'Pendente',
+                'concluido': 'Concluído',
+                'cancelado': 'Cancelado'
+            };
+
+            contentHtml = dayEvents.map(s => `
+                <div class="day-event-item" onclick="window.dashboard?.goToServico('${s.id}')">
+                    <div class="event-header">
+                        <span class="event-title">${s.servico}</span>
+                        <span class="event-status ${s.status}">${statusLabels[s.status] || s.status}</span>
+                    </div>
+                    <div class="event-body">
+                        <span class="event-info">
+                            <i data-lucide="user"></i>
+                            <strong class="cliente-nome">${s.clientes?.nome || 'Cliente não informado'}</strong>
+                        </span>
+                        ${s.hora ? `<span class="event-info event-hora"><i data-lucide="clock"></i> ${s.hora}</span>` : ''}
+                        ${s.valor ? `<span class="event-info event-valor">R$ ${s.valor.toFixed(2)}</span>` : ''}
+                        ${s.pago === true ? '<span class="event-info" style="color: #4CAF50;">✅ Pago</span>' : ''}
+                        ${s.pago === false && s.status === 'concluido' ? '<span class="event-info" style="color: #F57C00;">⏳ Pendente</span>' : ''}
+                    </div>
+                </div>
+            `).join('');
         }
 
-        const dayDetails = document.getElementById('dayDetailsContent');
-        if (dayDetails) {
-            if (dayEvents.length === 0) {
-                dayDetails.innerHTML = `
-                    <div class="empty-day">
-                        <span class="empty-icon">📭</span>
-                        <h4>Nenhum serviço neste dia</h4>
-                        <p>Não há atividades registradas para ${date.toLocaleDateString('pt-BR', {
-                            day: 'numeric',
-                            month: 'long'
-                        })}</p>
-                    </div>
-                `;
-            } else {
-                const statusLabels = {
-                    'pendente': 'Pendente',
-                    'concluido': 'Concluído',
-                    'cancelado': 'Cancelado'
-                };
+        body.innerHTML = statsHtml + contentHtml;
 
-                dayDetails.innerHTML = dayEvents.map(s => `
-                    <div class="day-event-item" onclick="window.dashboard?.goToServico('${s.id}')">
-                        <div class="event-header">
-                            <span class="event-title">${s.servico}</span>
-                            <span class="event-status ${s.status}">${statusLabels[s.status] || s.status}</span>
-                        </div>
-                        <div class="event-body">
-                            <span class="event-info">
-                                <i data-lucide="user"></i>
-                                <strong class="cliente-nome">${s.clientes?.nome || 'Cliente não informado'}</strong>
-                            </span>
-                            ${s.hora ? `<span class="event-info event-hora"><i data-lucide="clock"></i> ${s.hora}</span>` : ''}
-                            ${s.valor ? `<span class="event-info event-valor">R$ ${s.valor.toFixed(2)}</span>` : ''}
-                            ${s.pago === true ? '<span class="event-info" style="color: #4CAF50;">✅ Pago</span>' : ''}
-                            ${s.pago === false && s.status === 'concluido' ? '<span class="event-info" style="color: #F57C00;">⏳ Pendente</span>' : ''}
-                        </div>
-                    </div>
-                `).join('');
+        if (window.lucide) lucide.createIcons();
 
-                if (window.lucide) lucide.createIcons();
-            }
-        }
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 
-        // Destacar dia
-        document.querySelectorAll('.calendar-day.selected').forEach(el => {
-            el.classList.remove('selected');
-        });
-        document.querySelectorAll('.calendar-day:not(.empty)').forEach(el => {
-            if (el.dataset.date === dateStr) {
-                el.classList.add('selected');
-            }
-        });
-
-        if (this.isExpanded) {
-            document.querySelectorAll('#overlayCalendarGrid .calendar-day.selected').forEach(el => {
-                el.classList.remove('selected');
-            });
-            document.querySelectorAll('#overlayCalendarGrid .calendar-day:not(.empty)').forEach(el => {
-                if (el.dataset.date === dateStr) {
-                    el.classList.add('selected');
-                }
-            });
+    closeDayModal() {
+        const overlay = document.getElementById('dayModalOverlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
         }
     }
 
@@ -537,7 +635,7 @@ export class Dashboard {
             if (this.selectedDate) {
                 const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
                 if (newDate.getMonth() === this.currentDate.getMonth()) {
-                    this.selectDate(newDate);
+                    this.selectedDate = newDate;
                 }
             }
         });
@@ -549,7 +647,7 @@ export class Dashboard {
             if (this.selectedDate) {
                 const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
                 if (newDate.getMonth() === this.currentDate.getMonth()) {
-                    this.selectDate(newDate);
+                    this.selectedDate = newDate;
                 }
             }
         });
@@ -559,7 +657,7 @@ export class Dashboard {
             this.currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
             this.renderCalendar('overlayCalendarGrid', 'overlayTitle', 'overlayEventCount');
             this.renderCalendar('calendarGrid', 'calendarTitle', 'eventCountBadge');
-            this.selectDate(today);
+            this.selectedDate = today;
         });
 
         document.addEventListener('keydown', (e) => {
@@ -579,7 +677,7 @@ export class Dashboard {
             if (this.selectedDate) {
                 const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
                 if (newDate.getMonth() === this.currentDate.getMonth()) {
-                    this.selectDate(newDate);
+                    this.selectedDate = newDate;
                 }
             }
         });
@@ -590,7 +688,7 @@ export class Dashboard {
             if (this.selectedDate) {
                 const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
                 if (newDate.getMonth() === this.currentDate.getMonth()) {
-                    this.selectDate(newDate);
+                    this.selectedDate = newDate;
                 }
             }
         });
@@ -599,7 +697,7 @@ export class Dashboard {
             const today = new Date();
             this.currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
             this.renderCalendar('calendarGrid', 'calendarTitle', 'eventCountBadge');
-            this.selectDate(today);
+            this.selectedDate = today;
         });
     }
 
