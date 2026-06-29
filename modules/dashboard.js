@@ -3,14 +3,15 @@ import supabase from '../services/supabase.js';
 
 export class Dashboard {
     constructor() {
-        this.calendar = null;
         this.servicos = [];
+        this.currentDate = new Date();
+        this.selectedDate = null;
         this.init();
     }
 
     async init() {
         await this.loadData();
-        await this.initCalendar();
+        this.renderCalendar();
         this.setupEventListeners();
         this.setupCardNavigation();
     }
@@ -22,7 +23,6 @@ export class Dashboard {
         try {
             console.log('📥 Carregando dados do dashboard...');
 
-            // Buscar todos os dados necessários
             const [
                 clientes,
                 servicos,
@@ -44,7 +44,6 @@ export class Dashboard {
                 `)
             ]);
 
-            // Calcular valores financeiros
             const valorRecebido = servicosComValor.data
                 ?.filter(s => s.status === 'concluido' && s.pago === true)
                 ?.reduce((sum, s) => sum + (s.valor || 0), 0) || 0;
@@ -56,10 +55,8 @@ export class Dashboard {
             const totalGeral = valorRecebido + valorAReceber;
             const percentualRecebido = totalGeral > 0 ? (valorRecebido / totalGeral) * 100 : 0;
 
-            // Armazenar serviços
             this.servicos = servicosComValor.data || [];
 
-            // Atualizar cards
             this.updateStats({
                 clientes: clientes.count || 0,
                 servicos: servicos.count || 0,
@@ -71,16 +68,23 @@ export class Dashboard {
                 valorAReceber
             });
 
-            // Atualizar resumo financeiro
             document.getElementById('resumoRecebido').textContent = `R$ ${valorRecebido.toFixed(2)}`;
             document.getElementById('resumoAReceber').textContent = `R$ ${valorAReceber.toFixed(2)}`;
             document.getElementById('resumoTotal').textContent = `R$ ${totalGeral.toFixed(2)}`;
             document.getElementById('resumoPercentual').textContent = `${percentualRecebido.toFixed(1)}%`;
 
-            // Renderizar listas
             this.renderUltimosServicos(servicosComValor.data || []);
             this.renderProximosServicos(servicosComValor.data || []);
             this.renderTimeline();
+
+            // Selecionar hoje
+            this.selectDate(new Date());
+
+            // Esconder loading
+            const loading = document.getElementById('loadingDashboard');
+            const data = document.getElementById('dashboardData');
+            if (loading) loading.style.display = 'none';
+            if (data) data.style.display = 'block';
 
             console.log('✅ Dashboard carregado com sucesso!');
 
@@ -90,9 +94,6 @@ export class Dashboard {
         }
     }
 
-    // ============================================
-    // ATUALIZAÇÃO DE STATS
-    // ============================================
     updateStats(data) {
         const elements = {
             totalClientes: data.clientes,
@@ -111,9 +112,6 @@ export class Dashboard {
         });
     }
 
-    // ============================================
-    // NAVEGAÇÃO DOS CARDS
-    // ============================================
     setupCardNavigation() {
         document.querySelectorAll('.card-indicator').forEach(card => {
             card.addEventListener('click', () => {
@@ -123,9 +121,6 @@ export class Dashboard {
         });
     }
 
-    // ============================================
-    // RENDERIZAÇÃO DOS ÚLTIMOS SERVIÇOS
-    // ============================================
     renderUltimosServicos(servicos) {
         const container = document.getElementById('ultimosServicos');
         if (!container) return;
@@ -169,9 +164,6 @@ export class Dashboard {
         `}).join('');
     }
 
-    // ============================================
-    // RENDERIZAÇÃO DOS PRÓXIMOS SERVIÇOS
-    // ============================================
     renderProximosServicos(servicos) {
         const container = document.getElementById('proximosServicos');
         if (!container) return;
@@ -208,21 +200,15 @@ export class Dashboard {
         `).join('');
     }
 
-    // ============================================
-    // TIMELINE
-    // ============================================
     renderTimeline() {
         const container = document.getElementById('timelineContent');
         if (!container) return;
 
-        // Criar eventos da timeline
         const eventos = [];
 
-        // Serviços criados
         this.servicos.forEach(s => {
             eventos.push({
                 data: s.created_at || s.data,
-                tipo: 'servico_criado',
                 descricao: `Serviço "${s.servico}" criado para ${s.clientes?.nome || 'cliente'}`,
                 link: `servicos.html?id=${s.id}`,
                 icone: 'briefcase',
@@ -232,7 +218,6 @@ export class Dashboard {
             if (s.status === 'concluido') {
                 eventos.push({
                     data: s.updated_at || s.data,
-                    tipo: 'servico_concluido',
                     descricao: `Serviço "${s.servico}" concluído para ${s.clientes?.nome || 'cliente'}`,
                     link: `servicos.html?id=${s.id}`,
                     icone: 'check-circle',
@@ -243,7 +228,6 @@ export class Dashboard {
             if (s.pago === true && s.status === 'concluido') {
                 eventos.push({
                     data: s.updated_at || s.data,
-                    tipo: 'pagamento_recebido',
                     descricao: `Pagamento de R$ ${(s.valor || 0).toFixed(2)} recebido de ${s.clientes?.nome || 'cliente'}`,
                     link: `servicos.html?id=${s.id}`,
                     icone: 'dollar-sign',
@@ -252,7 +236,6 @@ export class Dashboard {
             }
         });
 
-        // Ordenar por data (mais recentes primeiro)
         eventos.sort((a, b) => new Date(b.data) - new Date(a.data));
         const recentes = eventos.slice(0, 10);
 
@@ -294,144 +277,156 @@ export class Dashboard {
         return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
-    // ============================================
-    // GO TO SERVIÇO
-    // ============================================
     goToServico(servicoId) {
         if (!servicoId) return;
         window.location.href = `servicos.html?id=${servicoId}`;
     }
 
     // ============================================
-    // CALENDÁRIO
+    // CALENDÁRIO - RENDERIZAÇÃO
     // ============================================
-    getEvents() {
-        return this.servicos.map(s => {
-            const statusColors = {
-                'pendente': '#F57C00',
-                'concluido': '#4CAF50',
-                'cancelado': '#f44336'
-            };
+    
+    renderCalendar() {
+        const container = document.getElementById('calendarGrid');
+        if (!container) return;
 
-            return {
-                id: String(s.id),
-                title: s.servico || 'Serviço',
-                start: s.data,
-                extendedProps: {
-                    ...s,
-                    clienteNome: s.clientes?.nome || 'Cliente'
-                },
-                backgroundColor: statusColors[s.status] || '#B71C1C',
-                borderColor: statusColors[s.status] || '#B71C1C',
-                textColor: '#FFFFFF',
-                classNames: ['fc-event-clickable']
-            };
+        const year = this.currentDate.getFullYear();
+        const month = this.currentDate.getMonth();
+
+        // Título
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
+
+        // Contar eventos do mês
+        const monthEvents = this.servicos.filter(s => {
+            const d = new Date(s.data);
+            return d.getMonth() === month && d.getFullYear() === year;
         });
-    }
-
-    async initCalendar() {
-        const calendarEl = document.getElementById('calendar');
-        if (!calendarEl) return;
-
-        if (typeof FullCalendar === 'undefined') {
-            await new Promise(resolve => {
-                const check = () => {
-                    if (typeof FullCalendar !== 'undefined') resolve();
-                    else setTimeout(check, 100);
-                };
-                check();
-            });
+        const badge = document.getElementById('eventCountBadge');
+        if (badge) {
+            const count = monthEvents.length;
+            badge.textContent = `${count} evento${count !== 1 ? 's' : ''}`;
+            badge.className = 'event-count-badge' + (count === 0 ? ' empty' : '');
         }
 
-        const events = this.getEvents();
+        // Dias da semana
+        const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        
+        // Primeiro dia do mês
+        const firstDay = new Date(year, month, 1);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const startDayOfWeek = firstDay.getDay();
 
-        this.calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: false,
-            events: events,
-            editable: false,
-            selectable: true,
-            dayMaxEvents: 3,
-            weekends: true,
-            eventClick: this.handleEventClick.bind(this),
-            dateClick: this.handleDateClick.bind(this),
-            eventDidMount: this.handleEventMount.bind(this),
-            dayCellDidMount: this.handleDayCellMount.bind(this),
-            eventTimeFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                meridiem: false
-            },
-            views: {
-                dayGridMonth: {
-                    dayMaxEvents: 4
+        let html = '<div class="calendar-grid">';
+
+        // Cabeçalho
+        weekDays.forEach(day => {
+            html += `<div class="calendar-weekday">${day}</div>`;
+        });
+
+        // Células vazias
+        for (let i = 0; i < startDayOfWeek; i++) {
+            html += `<div class="calendar-day empty"></div>`;
+        }
+
+        // Dias do mês
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateObj = new Date(year, month, day);
+            const dateStr = dateObj.toISOString().split('T')[0];
+            const isToday = dateStr === todayStr;
+            
+            const dayEvents = this.servicos.filter(s => s.data === dateStr);
+            const hasEvents = dayEvents.length > 0;
+
+            let classes = 'calendar-day';
+            if (isToday) classes += ' today';
+            if (hasEvents) classes += ' has-events';
+
+            html += `<div class="${classes}" data-date="${dateStr}">`;
+            html += `<div class="day-number">${day}</div>`;
+
+            if (hasEvents) {
+                html += `<div class="day-events">`;
+                const displayEvents = dayEvents.slice(0, 3);
+                displayEvents.forEach(e => {
+                    const statusClass = e.status || 'pendente';
+                    html += `<div class="day-event ${statusClass}" data-id="${e.id}" title="${e.servico} - ${e.clientes?.nome || ''}">${e.servico}</div>`;
+                });
+                if (dayEvents.length > 3) {
+                    html += `<div class="day-more">+${dayEvents.length - 3} mais</div>`;
                 }
+                html += `</div>`;
             }
+
+            html += `</div>`;
+        }
+
+        // Completar a última linha
+        const totalCells = startDayOfWeek + daysInMonth;
+        const remainingCells = (7 - (totalCells % 7)) % 7;
+        for (let i = 0; i < remainingCells; i++) {
+            html += `<div class="calendar-day empty"></div>`;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Eventos de clique
+        container.querySelectorAll('.calendar-day:not(.empty)').forEach(dayEl => {
+            dayEl.addEventListener('click', () => {
+                const dateStr = dayEl.dataset.date;
+                if (dateStr) {
+                    const date = new Date(dateStr + 'T00:00:00');
+                    this.selectDate(date);
+                }
+            });
         });
 
-        this.calendar.render();
-        this.updateCalendarTitle();
-
-        // Selecionar hoje
-        this.selectDate(new Date());
-    }
-
-    updateCalendarTitle() {
-        if (!this.calendar) return;
-        const view = this.calendar.view;
-        const titleEl = document.getElementById('calendarTitle');
-        if (!titleEl) return;
-
-        if (view.type === 'dayGridMonth') {
-            const date = view.activeStart;
-            titleEl.textContent = date.toLocaleDateString('pt-BR', {
-                month: 'long',
-                year: 'numeric'
+        container.querySelectorAll('.day-event').forEach(eventEl => {
+            eventEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = eventEl.dataset.id;
+                if (id) this.goToServico(id);
             });
-        }
-    }
+        });
 
-    handleEventClick(info) {
-        const eventId = info.event.id;
-        if (eventId) this.goToServico(eventId);
-    }
+        container.querySelectorAll('.day-more').forEach(moreEl => {
+            moreEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dayEl = moreEl.closest('.calendar-day');
+                if (dayEl) {
+                    const dateStr = dayEl.dataset.date;
+                    if (dateStr) {
+                        const date = new Date(dateStr + 'T00:00:00');
+                        this.selectDate(date);
+                    }
+                }
+            });
+        });
 
-    handleDateClick(info) {
-        this.selectDate(info.date);
-    }
-
-    handleEventMount(info) {
-        const props = info.event.extendedProps;
-        if (props) {
-            info.el.title = `${props.servico} - ${props.clienteNome}`;
-            info.el.style.cursor = 'pointer';
-        }
-    }
-
-    handleDayCellMount(info) {
-        const dateStr = info.date.toISOString().split('T')[0];
-        const hasEvents = this.servicos.some(s => s.data === dateStr);
-        if (hasEvents) {
-            info.el.classList.add('has-events');
-        }
+        if (window.lucide) lucide.createIcons();
     }
 
     selectDate(date) {
+        this.selectedDate = date;
         const dateStr = date.toISOString().split('T')[0];
         const dayEvents = this.servicos.filter(s => s.data === dateStr);
 
-        // Atualizar título do dia
+        // Título
         const selectedDateEl = document.getElementById('selectedDate');
         if (selectedDateEl) {
-            selectedDateEl.innerHTML = `<strong>${date.toLocaleDateString('pt-BR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            })}</strong>`;
+            const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+            const day = date.getDate();
+            const month = date.toLocaleDateString('pt-BR', { month: 'long' });
+            const year = date.getFullYear();
+            selectedDateEl.innerHTML = `<strong>${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${day} de ${month} de ${year}</strong>`;
         }
 
-        // Mostrar eventos do dia no detalhe (já existe na seção de atividades)
+        // Detalhes
         const dayDetails = document.getElementById('dayDetailsContent');
         if (dayDetails) {
             if (dayEvents.length === 0) {
@@ -456,15 +451,17 @@ export class Dashboard {
                     <div class="day-event-item" onclick="window.dashboard?.goToServico('${s.id}')">
                         <div class="event-header">
                             <span class="event-title">${s.servico}</span>
-                            <span class="event-status ${s.status}">${statusLabels[s.status]}</span>
+                            <span class="event-status ${s.status}">${statusLabels[s.status] || s.status}</span>
                         </div>
                         <div class="event-body">
                             <span class="event-info">
                                 <i data-lucide="user"></i>
-                                <strong>${s.clientes?.nome || 'Cliente não informado'}</strong>
+                                <strong class="cliente-nome">${s.clientes?.nome || 'Cliente não informado'}</strong>
                             </span>
-                            ${s.hora ? `<span class="event-info"><i data-lucide="clock"></i> ${s.hora}</span>` : ''}
+                            ${s.hora ? `<span class="event-info event-hora"><i data-lucide="clock"></i> ${s.hora}</span>` : ''}
                             ${s.valor ? `<span class="event-info event-valor">R$ ${s.valor.toFixed(2)}</span>` : ''}
+                            ${s.pago === true ? '<span class="event-info" style="color: #4CAF50;">✅ Pago</span>' : ''}
+                            ${s.pago === false && s.status === 'concluido' ? '<span class="event-info" style="color: #F57C00;">⏳ Pendente</span>' : ''}
                         </div>
                     </div>
                 `).join('');
@@ -472,46 +469,54 @@ export class Dashboard {
                 if (window.lucide) lucide.createIcons();
             }
         }
+
+        // Destacar dia
+        document.querySelectorAll('.calendar-day.selected').forEach(el => {
+            el.classList.remove('selected');
+            el.style.borderColor = '';
+            el.style.borderWidth = '';
+        });
+        document.querySelectorAll('.calendar-day:not(.empty)').forEach(el => {
+            if (el.dataset.date === dateStr) {
+                el.classList.add('selected');
+            }
+        });
     }
 
     // ============================================
     // EVENT LISTENERS
     // ============================================
     setupEventListeners() {
-        // Navegação do calendário
-        document.getElementById('prevBtn')?.addEventListener('click', () => {
-            if (this.calendar) {
-                this.calendar.prev();
-                this.updateCalendarTitle();
+        document.getElementById('prevMonthBtn')?.addEventListener('click', () => {
+            this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+            this.renderCalendar();
+            if (this.selectedDate) {
+                const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
+                if (newDate.getMonth() === this.currentDate.getMonth()) {
+                    this.selectDate(newDate);
+                }
             }
         });
 
-        document.getElementById('nextBtn')?.addEventListener('click', () => {
-            if (this.calendar) {
-                this.calendar.next();
-                this.updateCalendarTitle();
+        document.getElementById('nextMonthBtn')?.addEventListener('click', () => {
+            this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+            this.renderCalendar();
+            if (this.selectedDate) {
+                const newDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.selectedDate.getDate());
+                if (newDate.getMonth() === this.currentDate.getMonth()) {
+                    this.selectDate(newDate);
+                }
             }
         });
 
         document.getElementById('todayBtn')?.addEventListener('click', () => {
-            if (this.calendar) {
-                this.calendar.today();
-                this.updateCalendarTitle();
-                this.selectDate(new Date());
-            }
-        });
-
-        // Refresh
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-                // Deixar o navegador fazer refresh
-            }
+            const today = new Date();
+            this.currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            this.renderCalendar();
+            this.selectDate(today);
         });
     }
 
-    // ============================================
-    // NOTIFICAÇÕES
-    // ============================================
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
@@ -525,16 +530,5 @@ export class Dashboard {
 window.dashboard = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Mostrar loading
-    const loading = document.getElementById('loadingDashboard');
-    const data = document.getElementById('dashboardData');
-
-    // Inicializar dashboard
     window.dashboard = new Dashboard();
-
-    // Esconder loading e mostrar dados
-    setTimeout(() => {
-        if (loading) loading.style.display = 'none';
-        if (data) data.style.display = 'block';
-    }, 500);
 });

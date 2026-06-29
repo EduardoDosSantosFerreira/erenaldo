@@ -1,10 +1,7 @@
 /* ============================================
-   DASHBOARD - CSS COMPLETO COM RESUMO DO DIA
+   DASHBOARD - CALENDÁRIO FIX
    ============================================ */
 
-/* ============================================
-   VARIÁVEIS
-   ============================================ */
 :root {
     --primary: #B71C1C;
     --primary-dark: #8B0000;
@@ -26,18 +23,13 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ============================================
-   MAIN CONTAINER
-   ============================================ */
 .dashboard-main {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 16px 20px;
 }
 
-/* ============================================
-   LOADING
-   ============================================ */
+/* LOADING */
 .loading-container {
     display: flex;
     justify-content: center;
@@ -66,9 +58,7 @@
     font-weight: 500;
 }
 
-/* ============================================
-   CARDS DE INDICADORES - 2x2x2x2
-   ============================================ */
+/* CARDS */
 .cards-section {
     margin-bottom: 20px;
 }
@@ -94,25 +84,10 @@
     overflow: hidden;
 }
 
-.card-indicator::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    opacity: 0;
-    transition: var(--transition);
-}
-
 .card-indicator:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-lg);
     border-color: var(--gray-200);
-}
-
-.card-indicator:hover::before {
-    opacity: 1;
 }
 
 .card-indicator:active {
@@ -163,12 +138,12 @@
 }
 
 /* ============================================
-   CALENDÁRIO
+   CALENDÁRIO - CORRIGIDO
    ============================================ */
 .calendar-section-full {
     background: var(--white);
     border-radius: var(--radius-lg);
-    padding: 18px 20px;
+    padding: 20px 20px 16px;
     box-shadow: var(--shadow);
     border: 1px solid var(--gray-100);
     transition: var(--transition);
@@ -189,222 +164,269 @@
     gap: 10px;
 }
 
-.calendar-header h3 {
+.calendar-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.calendar-title-group h3 {
     font-size: 16px;
     font-weight: 600;
     color: var(--gray-700);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin: 0;
 }
 
-.calendar-header h3 i {
+.calendar-title-group h3 i {
     color: var(--primary);
     width: 20px;
     height: 20px;
 }
 
-.calendar-header .nav-buttons {
+.event-count-badge {
+    background: var(--primary);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+}
+
+.event-count-badge.empty {
+    background: var(--gray-300);
+}
+
+.nav-buttons {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
     flex-wrap: wrap;
 }
 
-.calendar-header .nav-buttons button {
-    padding: 8px 16px;
+.nav-buttons .nav-btn {
+    padding: 8px 14px;
     border: 1px solid var(--gray-200);
     background: var(--white);
     border-radius: var(--radius-sm);
-    font-size: 15px;
+    font-size: 16px;
     cursor: pointer;
     transition: var(--transition);
     color: var(--gray-600);
-    min-height: 40px;
-    min-width: 40px;
-}
-
-.calendar-header .nav-buttons button:hover {
-    background: var(--gray-100);
-    border-color: var(--gray-300);
-}
-
-.calendar-header .nav-buttons .today-btn {
-    padding: 8px 18px;
-    font-weight: 600;
-    color: var(--primary);
-    border-color: var(--primary);
-    font-size: 14px;
-    min-height: 40px;
-}
-
-.calendar-header .nav-buttons .today-btn:hover {
-    background: var(--primary);
-    color: var(--white);
-}
-
-.calendar-header .current-date {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--secondary);
-    min-width: 150px;
-    text-align: center;
-}
-
-/* FullCalendar */
-#calendar {
-    width: 100%;
-    max-width: 100%;
-}
-
-.fc {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
-}
-
-.fc .fc-toolbar {
-    display: none !important;
-}
-
-.fc .fc-col-header-cell {
-    padding: 10px 0 !important;
-    background: var(--gray-50);
-    border: none !important;
-}
-
-.fc .fc-col-header-cell-cushion {
-    font-weight: 700;
-    color: var(--gray-500);
-    text-transform: uppercase;
-    font-size: 13px;
-    letter-spacing: 0.8px;
-    padding: 8px 0 !important;
-}
-
-.fc .fc-daygrid-day {
-    cursor: pointer;
-    transition: var(--transition);
-    border: 1px solid var(--gray-200) !important;
-    border-radius: 6px !important;
-    min-height: 90px;
-    background: var(--white);
-}
-
-.fc .fc-daygrid-day:hover {
-    background: var(--gray-50);
-    border-color: var(--primary) !important;
-}
-
-.fc .fc-daygrid-day-frame {
-    padding: 6px 8px !important;
-    min-height: 90px;
-    display: flex;
-    flex-direction: column;
-}
-
-.fc .fc-daygrid-day-number {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--gray-700);
-    padding: 4px 6px !important;
+    min-height: 38px;
+    min-width: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    margin: 2px;
-    border-radius: 50%;
-    transition: var(--transition);
-    flex-shrink: 0;
+    font-weight: 500;
 }
 
-.fc .fc-daygrid-day-number:hover {
-    background: var(--gray-100);
+.nav-buttons .nav-btn:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-300);
 }
 
-.fc .fc-day-today {
-    background: rgba(183, 28, 28, 0.08) !important;
-    border-color: var(--primary) !important;
-    border-width: 2px !important;
+.nav-buttons .nav-btn:active {
+    transform: scale(0.92);
 }
 
-.fc .fc-day-today .fc-daygrid-day-number {
-    background: var(--primary) !important;
-    color: var(--white) !important;
-    font-weight: 700 !important;
-    width: 40px;
-    height: 40px;
-    font-size: 18px !important;
-    box-shadow: 0 2px 12px rgba(183, 28, 28, 0.35);
-}
-
-.fc .fc-daygrid-day.has-events {
-    background: rgba(183, 28, 28, 0.03);
-}
-
-.fc .fc-daygrid-day.has-events .fc-daygrid-day-number {
-    color: var(--primary);
-    font-weight: 700;
-    position: relative;
-}
-
-.fc .fc-daygrid-day.has-events .fc-daygrid-day-number::after {
-    content: "•";
-    position: absolute;
-    bottom: 0px;
-    font-size: 16px;
-    color: var(--primary);
-}
-
-.fc .fc-daygrid-day-events {
-    min-height: 24px !important;
-    padding: 2px 4px !important;
-    flex: 1;
-}
-
-.fc .fc-daygrid-event {
-    border-radius: 4px !important;
-    padding: 3px 8px !important;
-    cursor: pointer !important;
-    border: none !important;
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    margin: 2px 0 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    transition: var(--transition);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    min-height: 22px;
-}
-
-.fc .fc-daygrid-event:hover {
-    transform: scale(1.03);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-}
-
-.fc .fc-daygrid-event .fc-event-title {
-    font-weight: 500 !important;
-    font-size: 10px !important;
-}
-
-.fc .fc-daygrid-event-dot {
-    display: none !important;
-}
-
-.fc .fc-daygrid-more-link {
-    font-size: 11px !important;
-    color: var(--gray-500) !important;
+.nav-buttons .month-label {
+    font-size: 15px;
     font-weight: 600;
-    padding: 2px 6px !important;
+    color: var(--secondary);
+    padding: 0 8px;
+    min-width: 140px;
+    text-align: center;
 }
 
-.fc .fc-daygrid-more-link:hover {
-    color: var(--primary) !important;
+.nav-buttons .today-btn {
+    padding: 8px 18px;
+    font-weight: 600;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+    font-size: 13px;
+    min-height: 38px;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.nav-buttons .today-btn:hover {
+    background: var(--primary);
+    color: var(--white);
+    box-shadow: 0 4px 15px rgba(183, 28, 28, 0.25);
+}
+
+.nav-buttons .today-btn:active {
+    transform: scale(0.92);
 }
 
 /* ============================================
-   RESUMO DO DIA (ATIVIDADES DO DIA)
+   CALENDÁRIO GRID - FIXADO
+   ============================================ */
+#calendarGrid {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    width: 100%;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 10px 0;
+    background: var(--gray-50);
+    border-radius: 4px;
+}
+
+.calendar-day {
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: 6px;
+    min-height: 80px;
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.calendar-day:hover {
+    border-color: var(--primary);
+    background: var(--gray-50);
+    box-shadow: 0 2px 8px rgba(183, 28, 28, 0.08);
+}
+
+.calendar-day.empty {
+    background: var(--gray-50);
+    border-color: transparent;
+    cursor: default;
+}
+
+.calendar-day.empty:hover {
+    background: var(--gray-50);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.calendar-day .day-number {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: var(--transition);
+    margin: 2px 0;
+}
+
+.calendar-day .day-number:hover {
+    background: var(--gray-100);
+}
+
+.calendar-day.today {
+    border-color: var(--primary);
+    border-width: 2px;
+    background: rgba(183, 28, 28, 0.04);
+}
+
+.calendar-day.today .day-number {
+    background: var(--primary);
+    color: var(--white);
+    font-weight: 700;
+    box-shadow: 0 2px 12px rgba(183, 28, 28, 0.35);
+}
+
+.calendar-day.has-events .day-number {
+    color: var(--primary);
+    font-weight: 600;
+    position: relative;
+}
+
+.calendar-day.has-events .day-number::after {
+    content: "•";
+    position: absolute;
+    bottom: -2px;
+    font-size: 14px;
+    color: var(--primary);
+}
+
+.calendar-day.today.has-events .day-number::after {
+    color: var(--white);
+}
+
+.calendar-day .day-events {
+    flex: 1;
+    padding: 2px 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+    min-height: 20px;
+}
+
+.calendar-day .day-event {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: var(--transition);
+    line-height: 1.3;
+}
+
+.calendar-day .day-event:hover {
+    transform: scale(1.04);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.calendar-day .day-event.pendente { background: #F57C00; }
+.calendar-day .day-event.concluido { background: #4CAF50; }
+.calendar-day .day-event.cancelado { background: #f44336; }
+
+.calendar-day .day-more {
+    font-size: 9px;
+    color: var(--gray-500);
+    font-weight: 600;
+    padding: 1px 4px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.calendar-day .day-more:hover {
+    color: var(--primary);
+}
+
+.calendar-day.selected {
+    border-color: var(--primary);
+    border-width: 2px;
+    background: rgba(183, 28, 28, 0.06);
+}
+
+/* ============================================
+   DETALHES DO DIA
    ============================================ */
 .day-details-full {
     background: var(--white);
@@ -455,17 +477,28 @@
     color: var(--secondary);
 }
 
-.day-details-header .day-date .empty-date {
+.empty-day {
+    text-align: center;
+    padding: 30px 15px;
     color: var(--gray-400);
-    font-weight: 400;
 }
 
-.day-details-header .day-date .empty-date i {
-    width: 14px;
-    height: 14px;
+.empty-day .empty-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+    display: block;
 }
 
-/* Day Event Item */
+.empty-day h4 {
+    font-size: 15px;
+    color: var(--gray-600);
+    margin-bottom: 4px;
+}
+
+.empty-day p {
+    font-size: 13px;
+}
+
 .day-event-item {
     background: var(--gray-50);
     border-radius: var(--radius-sm);
@@ -551,37 +584,7 @@
     font-size: 14px;
 }
 
-.day-event-item .event-body .event-hora {
-    font-size: 12px;
-    color: var(--gray-400);
-}
-
-/* Empty day */
-.empty-day {
-    text-align: center;
-    padding: 30px 15px;
-    color: var(--gray-400);
-}
-
-.empty-day .empty-icon {
-    font-size: 40px;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.empty-day h4 {
-    font-size: 15px;
-    color: var(--gray-600);
-    margin-bottom: 4px;
-}
-
-.empty-day p {
-    font-size: 13px;
-}
-
-/* ============================================
-   RESUMO FINANCEIRO - 2x2
-   ============================================ */
+/* FINANCEIRO */
 .financeiro-resumo-full {
     background: var(--white);
     border-radius: var(--radius-lg);
@@ -677,9 +680,7 @@
     max-width: 120px;
 }
 
-/* ============================================
-   SERVIÇOS
-   ============================================ */
+/* LISTAS */
 .servicos-list-full {
     background: var(--white);
     border-radius: var(--radius-lg);
@@ -809,9 +810,7 @@
     color: var(--gray-400);
 }
 
-/* ============================================
-   TIMELINE
-   ============================================ */
+/* TIMELINE */
 .timeline-section {
     background: var(--white);
     border-radius: var(--radius-lg);
@@ -907,9 +906,6 @@
     text-decoration: underline;
 }
 
-/* ============================================
-   EMPTY STATE
-   ============================================ */
 .empty-state {
     text-align: center;
     padding: 16px;
@@ -930,258 +926,107 @@
 /* ============================================
    RESPONSIVIDADE
    ============================================ */
-
-/* Desktop */
-@media (min-width: 993px) {
-    .cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-    }
-    
-    .resumo-grid-full {
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-    }
-    
-    .fc .fc-daygrid-day {
-        min-height: 100px;
-    }
-    
-    .fc .fc-daygrid-day-frame {
-        min-height: 100px;
-    }
-}
-
-/* Tablets */
 @media (max-width: 992px) {
-    .cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+    .calendar-day {
+        min-height: 70px;
+        padding: 3px 4px;
     }
     
-    .resumo-grid-full {
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
-    
-    .fc .fc-daygrid-day {
-        min-height: 80px;
-    }
-    
-    .fc .fc-daygrid-day-frame {
-        min-height: 80px;
-    }
-    
-    .fc .fc-daygrid-day-number {
-        font-size: 15px;
-        width: 32px;
-        height: 32px;
-    }
-    
-    .fc .fc-day-today .fc-daygrid-day-number {
-        width: 36px;
-        height: 36px;
-        font-size: 16px !important;
-    }
-    
-    .day-event-item .event-header .event-title {
+    .calendar-day .day-number {
         font-size: 13px;
+        width: 28px;
+        height: 28px;
+    }
+    
+    .calendar-day .day-event {
+        font-size: 8px;
+        padding: 1px 4px;
     }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
     .dashboard-main {
         padding: 0 12px 16px;
     }
-    
-    .cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-    
-    .card-indicator {
-        padding: 14px 14px;
-        gap: 10px;
-    }
-    
-    .card-indicator .card-icon {
-        width: 36px;
-        height: 36px;
-    }
-    
-    .card-indicator .card-icon i {
-        width: 16px;
-        height: 16px;
-    }
-    
-    .card-indicator .card-value {
-        font-size: 18px;
-    }
-    
-    .card-indicator .card-label {
-        font-size: 10px;
-    }
-    
-    .calendar-section-full {
-        padding: 14px 14px;
-    }
-    
+
     .calendar-header {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: 10px;
     }
-    
-    .calendar-header h3 {
-        justify-content: center;
-        font-size: 15px;
-    }
-    
-    .calendar-header .current-date {
-        min-width: auto;
-        font-size: 14px;
-        text-align: center;
-    }
-    
-    .calendar-header .nav-buttons {
+
+    .calendar-title-group {
         justify-content: center;
     }
-    
-    .calendar-header .nav-buttons button {
-        padding: 8px 14px;
+
+    .nav-buttons {
+        justify-content: center;
+    }
+
+    .nav-buttons .month-label {
+        min-width: 100px;
         font-size: 14px;
-        min-height: 38px;
     }
-    
-    .calendar-header .nav-buttons .today-btn {
-        padding: 8px 16px;
-        font-size: 13px;
+
+    .calendar-grid {
+        gap: 3px;
     }
-    
-    .fc .fc-col-header-cell-cushion {
-        font-size: 11px;
-        padding: 6px 0 !important;
+
+    .calendar-day {
+        min-height: 60px;
+        padding: 2px 3px;
     }
-    
-    .fc .fc-daygrid-day {
-        min-height: 70px !important;
+
+    .calendar-day .day-number {
+        font-size: 12px;
+        width: 24px;
+        height: 24px;
+        margin: 1px 0;
     }
-    
-    .fc .fc-daygrid-day-frame {
-        min-height: 70px !important;
-        padding: 4px 6px !important;
+
+    .calendar-day .day-event {
+        font-size: 7px;
+        padding: 1px 3px;
+        min-height: 14px;
     }
-    
-    .fc .fc-daygrid-day-number {
-        font-size: 14px;
-        width: 30px;
-        height: 30px;
-        margin: 2px;
+
+    .calendar-day .day-more {
+        font-size: 7px;
     }
-    
-    .fc .fc-day-today .fc-daygrid-day-number {
-        width: 34px;
-        height: 34px;
-        font-size: 15px !important;
+
+    .calendar-weekday {
+        font-size: 9px;
+        padding: 6px 0;
     }
-    
-    .fc .fc-daygrid-event {
-        font-size: 10px !important;
-        padding: 2px 6px !important;
-        min-height: 20px;
-        margin: 2px 0 !important;
-    }
-    
-    .fc .fc-daygrid-event .fc-event-title {
-        font-size: 9px !important;
-    }
-    
-    .fc .fc-daygrid-day-events {
-        min-height: 20px !important;
-        padding: 2px 4px !important;
-    }
-    
-    .day-details-full {
-        padding: 14px 14px;
-    }
-    
+
     .day-details-header {
         flex-direction: column;
-        align-items: stretch;
         text-align: center;
-        gap: 4px;
     }
-    
-    .day-details-header h3 {
-        justify-content: center;
-        font-size: 14px;
-    }
-    
-    .day-details-header .day-date {
-        font-size: 13px;
-    }
-    
-    .day-event-item {
-        padding: 10px 12px;
-    }
-    
+
     .day-event-item .event-header {
         flex-direction: column;
         align-items: stretch;
         gap: 4px;
     }
-    
+
     .day-event-item .event-body {
         flex-direction: column;
         gap: 4px;
-        font-size: 12px;
     }
-    
-    .financeiro-resumo-full {
-        padding: 14px 14px;
-    }
-    
-    .resumo-grid-full {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    
-    .resumo-item {
-        padding: 10px 12px;
-    }
-    
-    .resumo-item .resumo-value {
-        font-size: 16px;
-    }
-    
-    .servicos-list-full {
-        padding: 14px 14px;
-    }
-    
+
     .servico-item {
         flex-direction: column;
         align-items: stretch;
-        gap: 4px;
     }
-    
+
     .servico-item .servico-meta {
         justify-content: space-between;
     }
-    
-    .timeline-section {
-        padding: 14px 14px;
-    }
 }
 
-/* Mobile pequeno */
 @media (max-width: 480px) {
-    .dashboard-main {
-        padding: 0 8px 12px;
-    }
-    
     .cards-grid {
-        grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
     
@@ -1207,138 +1052,108 @@
     .card-indicator .card-label {
         font-size: 9px;
     }
-    
+
     .calendar-section-full {
-        padding: 12px 12px;
+        padding: 12px 12px 10px;
     }
-    
-    .calendar-header .nav-buttons button {
+
+    .calendar-grid {
+        gap: 2px;
+    }
+
+    .calendar-day {
+        min-height: 50px;
+        padding: 2px 2px;
+        border-radius: 4px;
+    }
+
+    .calendar-day .day-number {
+        font-size: 11px;
+        width: 20px;
+        height: 20px;
+        margin: 1px 0;
+    }
+
+    .calendar-day .day-event {
+        font-size: 6px;
+        padding: 1px 2px;
+        min-height: 12px;
+        border-radius: 2px;
+    }
+
+    .calendar-day .day-more {
+        font-size: 6px;
+        padding: 0 2px;
+    }
+
+    .calendar-weekday {
+        font-size: 8px;
+        padding: 4px 0;
+        letter-spacing: 0.3px;
+    }
+
+    .nav-buttons .nav-btn {
+        padding: 6px 10px;
+        font-size: 14px;
+        min-height: 32px;
+        min-width: 32px;
+    }
+
+    .nav-buttons .month-label {
+        font-size: 13px;
+        min-width: 80px;
+    }
+
+    .nav-buttons .today-btn {
         padding: 6px 12px;
-        font-size: 13px;
-        min-height: 36px;
-        min-width: 36px;
+        font-size: 11px;
+        min-height: 32px;
     }
-    
-    .calendar-header .nav-buttons .today-btn {
-        padding: 6px 14px;
-        font-size: 12px;
+
+    .event-count-badge {
+        font-size: 8px;
+        padding: 1px 8px;
     }
-    
-    .calendar-header .current-date {
-        font-size: 13px;
-    }
-    
-    .fc .fc-col-header-cell-cushion {
-        font-size: 10px;
-        padding: 4px 0 !important;
-    }
-    
-    .fc .fc-daygrid-day {
-        min-height: 60px !important;
-    }
-    
-    .fc .fc-daygrid-day-frame {
-        min-height: 60px !important;
-        padding: 3px 4px !important;
-    }
-    
-    .fc .fc-daygrid-day-number {
-        font-size: 13px;
-        width: 28px;
-        height: 28px;
-        margin: 1px;
-    }
-    
-    .fc .fc-day-today .fc-daygrid-day-number {
-        width: 30px;
-        height: 30px;
-        font-size: 14px !important;
-    }
-    
-    .fc .fc-daygrid-event {
-        font-size: 9px !important;
-        padding: 2px 4px !important;
-        min-height: 18px;
-        margin: 1px 0 !important;
-    }
-    
-    .fc .fc-daygrid-event .fc-event-title {
-        font-size: 8px !important;
-    }
-    
-    .fc .fc-daygrid-day-events {
-        min-height: 16px !important;
-    }
-    
+
     .day-details-full {
         padding: 12px 12px;
     }
-    
-    .day-details-header .day-date {
-        font-size: 12px;
-    }
-    
+
     .day-event-item {
         padding: 8px 10px;
     }
-    
+
     .day-event-item .event-header .event-title {
         font-size: 12px;
     }
-    
+
     .day-event-item .event-body {
         font-size: 11px;
-        gap: 4px;
+        gap: 3px;
     }
-    
+
+    .day-event-item .event-body .event-valor {
+        font-size: 12px;
+    }
+
     .resumo-grid-full {
-        grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
-    
+
     .resumo-item {
         padding: 8px 10px;
     }
-    
+
     .resumo-item .resumo-value {
         font-size: 14px;
     }
-    
-    .servico-item .servico-info .servico-nome {
-        font-size: 11px;
-    }
-    
-    .servico-item .servico-info .servico-cliente {
-        font-size: 10px;
-    }
-    
-    .servico-item .servico-meta .servico-valor {
-        font-size: 12px;
-    }
-    
-    .timeline-item {
-        gap: 10px;
-        padding: 6px 0;
-    }
-    
-    .timeline-item .timeline-icon {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .timeline-item .timeline-icon i {
-        width: 12px;
-        height: 12px;
-    }
-    
-    .timeline-item .timeline-content .timeline-text {
-        font-size: 11px;
+
+    .servicos-list-full {
+        padding: 12px 12px;
     }
 }
 
-/* ============================================
-   SCROLLBAR
-   ============================================ */
+/* SCROLLBAR */
 ::-webkit-scrollbar {
     width: 4px;
     height: 4px;
@@ -1352,7 +1167,6 @@
 ::-webkit-scrollbar-thumb {
     background: var(--gray-300);
     border-radius: 2px;
-    transition: var(--transition);
 }
 
 ::-webkit-scrollbar-thumb:hover {

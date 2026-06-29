@@ -6,7 +6,6 @@
     <title>ERENALDO - Dashboard</title>
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css">
 </head>
 <body>
     <div class="app-container">
@@ -31,84 +30,61 @@
             <div id="dashboardData" style="display: none;">
 
                 <!-- ============================================
-                SECTION 1: CARDS DE INDICADORES (2x2x2x2)
+                SECTION 1: CARDS DE INDICADORES
                 ============================================ -->
                 <section class="cards-section">
                     <div class="cards-grid">
-                        <!-- Linha 1 -->
                         <div class="card-indicator" data-url="clientes.html">
-                            <div class="card-icon blue">
-                                <i data-lucide="users"></i>
-                            </div>
+                            <div class="card-icon blue"><i data-lucide="users"></i></div>
                             <div class="card-content">
                                 <span class="card-value" id="totalClientes">0</span>
                                 <span class="card-label">Clientes</span>
                             </div>
                         </div>
                         <div class="card-indicator" data-url="servicos.html">
-                            <div class="card-icon green">
-                                <i data-lucide="briefcase"></i>
-                            </div>
+                            <div class="card-icon green"><i data-lucide="briefcase"></i></div>
                             <div class="card-content">
                                 <span class="card-value" id="totalServicos">0</span>
                                 <span class="card-label">Serviços</span>
                             </div>
                         </div>
-
-                        <!-- Linha 2 -->
                         <div class="card-indicator" data-url="servicos.html?status=concluido">
-                            <div class="card-icon success">
-                                <i data-lucide="check-circle"></i>
-                            </div>
+                            <div class="card-icon success"><i data-lucide="check-circle"></i></div>
                             <div class="card-content">
                                 <span class="card-value" id="servicosConcluidos">0</span>
                                 <span class="card-label">Concluídos</span>
                             </div>
                         </div>
                         <div class="card-indicator" data-url="servicos.html?status=pendente">
-                            <div class="card-icon warning">
-                                <i data-lucide="clock"></i>
-                            </div>
+                            <div class="card-icon warning"><i data-lucide="clock"></i></div>
                             <div class="card-content">
                                 <span class="card-value" id="servicosPendentes">0</span>
                                 <span class="card-label">Pendentes</span>
                             </div>
                         </div>
-
-                        <!-- Linha 3 -->
                         <div class="card-indicator" data-url="servicos.html?status=cancelado">
-                            <div class="card-icon danger">
-                                <i data-lucide="x-circle"></i>
-                            </div>
+                            <div class="card-icon danger"><i data-lucide="x-circle"></i></div>
                             <div class="card-content">
                                 <span class="card-value" id="servicosCancelados">0</span>
                                 <span class="card-label">Cancelados</span>
                             </div>
                         </div>
                         <div class="card-indicator" data-url="notas.html">
-                            <div class="card-icon purple">
-                                <i data-lucide="file-text"></i>
-                            </div>
+                            <div class="card-icon purple"><i data-lucide="file-text"></i></div>
                             <div class="card-content">
                                 <span class="card-value" id="totalNotas">0</span>
                                 <span class="card-label">Notas Fiscais</span>
                             </div>
                         </div>
-
-                        <!-- Linha 4 -->
                         <div class="card-indicator" data-url="economia.html?filtro=recebido">
-                            <div class="card-icon money-green">
-                                <i data-lucide="dollar-sign"></i>
-                            </div>
+                            <div class="card-icon money-green"><i data-lucide="dollar-sign"></i></div>
                             <div class="card-content">
                                 <span class="card-value" id="valorRecebido">R$ 0,00</span>
                                 <span class="card-label">Recebido</span>
                             </div>
                         </div>
                         <div class="card-indicator" data-url="economia.html?filtro=receber">
-                            <div class="card-icon money-orange">
-                                <i data-lucide="dollar-sign"></i>
-                            </div>
+                            <div class="card-icon money-orange"><i data-lucide="dollar-sign"></i></div>
                             <div class="card-content">
                                 <span class="card-value" id="valorAReceber">R$ 0,00</span>
                                 <span class="card-label">A Receber</span>
@@ -118,48 +94,43 @@
                 </section>
 
                 <!-- ============================================
-                SECTION 2: CALENDÁRIO (OCUPA TUDO)
+                SECTION 2: CALENDÁRIO
                 ============================================ -->
                 <section class="calendar-section-full">
                     <div class="calendar-header">
-                        <h3>
-                            <i data-lucide="calendar"></i>
-                            Agenda de Serviços
-                        </h3>
+                        <div class="calendar-title-group">
+                            <h3><i data-lucide="calendar"></i> Agenda de Serviços</h3>
+                            <span class="event-count-badge" id="eventCountBadge">0 eventos</span>
+                        </div>
                         <div class="nav-buttons">
-                            <button id="prevBtn" title="Anterior">‹</button>
-                            <span class="current-date" id="calendarTitle">Carregando...</span>
-                            <button id="nextBtn" title="Próximo">›</button>
+                            <button class="nav-btn" id="prevMonthBtn" title="Mês anterior">‹</button>
+                            <span class="month-label" id="calendarTitle">Carregando...</span>
+                            <button class="nav-btn" id="nextMonthBtn" title="Próximo mês">›</button>
                             <button class="today-btn" id="todayBtn">Hoje</button>
                         </div>
                     </div>
-                    <div id="calendar"></div>
+                    <div id="calendarGrid"></div>
                 </section>
 
                 <!-- ============================================
-                SECTION 3: RESUMO DO DIA (ATIVIDADES DO DIA)
+                SECTION 3: RESUMO DO DIA
                 ============================================ -->
                 <section class="day-details-full">
                     <div class="day-details-header">
-                        <h3>
-                            <i data-lucide="list"></i>
-                            Atividades do Dia
-                        </h3>
-                        <span class="day-date" id="selectedDate">
-                            <strong>Selecione um dia no calendário</strong>
-                        </span>
+                        <h3><i data-lucide="list"></i> Atividades do Dia</h3>
+                        <span class="day-date" id="selectedDate"><strong>Selecione um dia</strong></span>
                     </div>
                     <div id="dayDetailsContent">
                         <div class="empty-day">
                             <span class="empty-icon">📅</span>
                             <h4>Nenhum dia selecionado</h4>
-                            <p>Clique em uma data no calendário para ver os detalhes</p>
+                            <p>Clique em uma data no calendário</p>
                         </div>
                     </div>
                 </section>
 
                 <!-- ============================================
-                SECTION 4: RESUMO FINANCEIRO (2x2)
+                SECTION 4: RESUMO FINANCEIRO
                 ============================================ -->
                 <section class="financeiro-resumo-full">
                     <div class="resumo-header">
@@ -190,22 +161,19 @@
                 </section>
 
                 <!-- ============================================
-                SECTION 5: PRÓXIMOS SERVIÇOS (EM CIMA)
+                SECTION 5: PRÓXIMOS SERVIÇOS
                 ============================================ -->
                 <section class="servicos-list-full">
                     <div class="list-header">
                         <h3><i data-lucide="calendar-check"></i> Próximos Serviços</h3>
                     </div>
                     <div id="proximosServicos">
-                        <div class="empty-state">
-                            <i data-lucide="inbox"></i>
-                            <p>Nenhum serviço agendado</p>
-                        </div>
+                        <div class="empty-state"><i data-lucide="inbox"></i><p>Nenhum serviço agendado</p></div>
                     </div>
                 </section>
 
                 <!-- ============================================
-                SECTION 6: ÚLTIMOS SERVIÇOS (EMBAIXO)
+                SECTION 6: ÚLTIMOS SERVIÇOS
                 ============================================ -->
                 <section class="servicos-list-full">
                     <div class="list-header">
@@ -213,25 +181,19 @@
                         <a href="servicos.html" class="list-link">Ver todos →</a>
                     </div>
                     <div id="ultimosServicos">
-                        <div class="empty-state">
-                            <i data-lucide="inbox"></i>
-                            <p>Nenhum serviço registrado</p>
-                        </div>
+                        <div class="empty-state"><i data-lucide="inbox"></i><p>Nenhum serviço registrado</p></div>
                     </div>
                 </section>
 
                 <!-- ============================================
-                SECTION 7: TIMELINE DE ATIVIDADES
+                SECTION 7: TIMELINE
                 ============================================ -->
                 <section class="timeline-section">
                     <div class="timeline-header">
                         <h3><i data-lucide="activity"></i> Atividades Recentes</h3>
                     </div>
                     <div id="timelineContent">
-                        <div class="empty-state">
-                            <i data-lucide="inbox"></i>
-                            <p>Nenhuma atividade recente</p>
-                        </div>
+                        <div class="empty-state"><i data-lucide="inbox"></i><p>Nenhuma atividade recente</p></div>
                     </div>
                 </section>
 
@@ -240,33 +202,31 @@
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <a href="dashboard.html" class="active">
-                <i data-lucide="home"></i>
-                <span>Início</span>
-            </a>
-            <a href="clientes.html">
-                <i data-lucide="users"></i>
-                <span>Clientes</span>
-            </a>
-            <a href="servicos.html">
-                <i data-lucide="briefcase"></i>
-                <span>Serviços</span>
-            </a>
-            <a href="notas.html">
-                <i data-lucide="file-text"></i>
-                <span>Notas</span>
-            </a>
-            <a href="economia.html">
-                <i data-lucide="dollar-sign"></i>
-                <span>Economia</span>
-            </a>
+            <a href="dashboard.html" class="active"><i data-lucide="home"></i><span>Início</span></a>
+            <a href="clientes.html"><i data-lucide="users"></i><span>Clientes</span></a>
+            <a href="servicos.html"><i data-lucide="briefcase"></i><span>Serviços</span></a>
+            <a href="notas.html"><i data-lucide="file-text"></i><span>Notas</span></a>
+            <a href="economia.html"><i data-lucide="dollar-sign"></i><span>Economia</span></a>
         </nav>
     </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="modules/dashboard.js" type="module"></script>
+    <script type="module">
+        import { AuthService } from './modules/auth.js';
+        import { Dashboard } from './modules/dashboard.js';
+
+        const user = await AuthService.checkAuth();
+        if (user) {
+            document.getElementById('userName').textContent = user.nome || 'Usuário';
+            document.getElementById('userAvatar').textContent = (user.nome || 'U').charAt(0).toUpperCase();
+        }
+
+        if (window.lucide) lucide.createIcons();
+
+        const dashboard = new Dashboard();
+        window.dashboard = dashboard;
+    </script>
 </body>
 </html>
